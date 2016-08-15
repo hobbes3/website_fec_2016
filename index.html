@@ -4,17 +4,18 @@
     <meta charset="utf-8">
 
     <title>2016 Presidential Election Influence - powered by Splunk</title>
-    <meta name="description" content="">
-    <meta name="author" content="Splunk">
+    <meta name="description" content="Splunk">
+    <meta name="author" content="Satoshi Kawasaki">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet">
+    <link href="http://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
+    <link href="css/grayscale.css" rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: arial,helvetica,"sans-serif";
-        }
-
         .label-text {
             alignment-baseline: middle;
             font-size: 12px;
-            fill: #393939;
+            fill: #d8d8d8;
             text-transform: uppercase;
         }
         .label-line {
@@ -24,6 +25,10 @@
         .label-circle {
             fill: #393939;
         }
+        path {
+            stroke: grey;
+            stroke-width: 1px;
+        }
 
         #toward_controls {
             position: absolute;
@@ -32,20 +37,124 @@
         }
     </style>
 </head>
-<body>
-    <form id="toward_controls">
-        <label class="radio-inline"><input name="optradio" type="radio" value="both" checked />Both</label>
-        <label class="radio-inline"><input name="optradio" type="radio" value="supporting" />Supporting</label>
-        <label class="radio-inline"><input name="optradio" type="radio" value="opposing" />Opposing</label>
-    </form>
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+    <!-- Navigation -->
+    <nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+                    Menu <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand page-scroll" href="#page-top">
+                    <i class="fa fa-play-circle"></i> <span class="light">Splunk</span>
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#about">About</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#data">Data</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Intro Header -->
+    <header class="intro">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <h1 class="brand-heading">Hillary vs Trump</h1>
+                        <p class="intro-text">2016 Presidential Election Influence</p>
+                        <a href="#about" class="btn btn-circle page-scroll">
+                            <i class="fa fa-angle-double-down animated"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>2016 Presidential Election Influence</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sollicitudin molestie orci, eu eleifend sem consequat nec. Etiam a consectetur massa. Phasellus vulputate lorem vitae lacus imperdiet, vitae bibendum augue condimentum. Etiam eu pulvinar odio. Mauris in sodales urna, vitae tincidunt massa. Ut a sodales orci, quis pulvinar mauris. Proin auctor ac est ac porttitor. Sed elementum pretium dictum. Fusce placerat consectetur nisi. Sed vel rhoncus turpis. Proin lacus lacus, luctus nec velit in, aliquam congue quam. Sed feugiat pretium neque, in vulputate mauris interdum id. In bibendum bibendum ultricies. Cras odio urna, congue eu pharetra sit amet, ultrices nec nisi.</p>
+                <p>Integer quis eros enim. In sed porttitor velit, non congue lectus. Sed venenatis ligula id libero tempus, et lobortis quam finibus. Vestibulum magna felis, mollis eu mauris ac, vulputate commodo velit. Donec quam nunc, hendrerit ac tincidunt ac, hendrerit et velit. Nunc et tempus nisl. Phasellus ornare eget nisl quis pretium. Sed eu ante convallis tortor consequat mollis a eu ante.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Section -->
+    <section id="data" class="content-section text-center">
+        <!--<div class="data-section">
+            <div class="container">
+                <div class="col-lg-8 col-lg-offset-2">-->
+                    <h2>Data</h2>
+                    <form id="toward_controls">
+                        <label class="radio-inline"><input name="optradio" type="radio" value="both" checked />Both</label>
+                        <label class="radio-inline"><input name="optradio" type="radio" value="supporting" />Supporting</label>
+                        <label class="radio-inline"><input name="optradio" type="radio" value="opposing" />Opposing</label>
+                    </form>
+                    <svg id="viz_influence"></svg>
+       <!--         </div>
+            </div>
+        </div>-->
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Contact Splunk</h2>
+                <p>Feel free to email or call us to inquire about Splunk products!</p>
+                <p><a href="https://www.splunk.com/en_us/about-us/contact.html" target="_blank">Contact Us</a></p>
+                <ul class="list-inline banner-social-buttons">
+                    <li>
+                        <a href="https://twitter.com/splunk" class="btn btn-default btn-lg" target="_blank"><i class="fa fa-twitter fa-fw"></i> <span class="network-name">Twitter</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p>© 2016 - Site powered by <a href="http://www.splunk.com/" target="_blank">Splunk</a> and built by Satoshi Kawasaki. Data provided by the <a href="https://beta.fec.gov/" target="_blank">Federal Election Commission</a>. Theme by <a href="http://blackrockdigital.io/" target="_blank">Blackrock Digital</a>.</p>
+        </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script>
     <script>
         require.config({
+            shim: {
+                "bootstrap": {
+                    "deps": ['jquery']
+                }
+            },
             paths: {
-                "d3": "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min",
-                "d3-path": "https://d3js.org/d3-path.v1.min",
-                "underscore": "https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min",
-                "jquery": "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"
+                "d3": "//cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min",
+                "d3-path": "//d3js.org/d3-path.v1.min",
+                "underscore": "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min",
+                "jquery": "//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min",
+                "bootstrap": "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min"
             }
         });
     </script>

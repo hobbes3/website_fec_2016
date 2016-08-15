@@ -15,31 +15,35 @@ function(
             "bottom": 80,
             "left": 10
         },
-        width = 1300 - margin.left - margin.right,
+        width = 1000 - margin.left - margin.right,
         height = 1000 - margin.top - margin.bottom,
-        radius = Math.min(width, height) / 2,
-        radius_label = radius + 20, // default radius for label before label_relax()
+        radius = Math.min(width, height) / 2 - Math.max(margin.top, margin.bottom),
+        radius_label = radius + 40, // default radius for label before label_relax()
         thickness = 25,
-        link_radius_cp_offset = 150,
-        length_inner = 2 * Math.sqrt(Math.pow(radius - thickness, 2) / 2);
+        link_radius_cp_offset = 50,
+        radius_pack = 0.8 * (radius - thickness),
+        padding_pack = 30,
         transition_duration = 750, // in ms
         opacity_link = 0.6,
         opacity_fade = 0.1,
         label_spacing = 5, // 5 px between the text label and line
-        label_wrap_length = 200, // wrap to under 200 px
+        label_wrap_length = 150, // wrap to under in px
         label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
         label_relax_sleep = 10; // sleep label_relax() in ms
 
-    var svg = d3.select("body")
-        .append("svg")
+    var svg = d3.select("svg#viz_influence")
             .attr({
                 "width": width + margin.left + margin.right,
                 "height": height + margin.top + margin.bottom
             })
+            .style({
+                "display": "block",
+                "margin": "auto"
+            })
         .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .attr("transform", "translate(" + [margin.left, margin.top] + ")")
         .append("g")
-            .attr("transform", "translate(" + (width / 2) + "," + (height / 2) + ")");
+            .attr("transform", "translate(" + [width / 2, height / 2] + ")");
 
     d3.json("/data/schedule_e.json", function(json) {
         var data = {};
@@ -197,7 +201,7 @@ function(
                             sign = (x > 0) ? 1 : -1,
                             label_x = x + (2 * sign),
                             label_y = Math.sin(mid_angle) * radius_label;
-                        return "translate(" + label_x + "," + label_y + ")";
+                        return "translate(" + [label_x, label_y] + ")";
                     }
                 })
                 .each(function(d) {
@@ -310,8 +314,8 @@ function(
 
                                 adjust = ta === "start" && aa > ab || ta === "end" && aa < ab ? label_relax_delta : -label_relax_delta;
 
-                            da.attr("transform", "translate(" + xa + "," + (ya + adjust) + ")");
-                            db.attr("transform", "translate(" + xb + "," + (yb - adjust) + ")");
+                            da.attr("transform", "translate(" + [xa, ya + adjust] + ")");
+                            db.attr("transform", "translate(" + [xb, yb - adjust] + ")");
                         });
                 });
 
@@ -334,7 +338,7 @@ function(
             .append("g")
                 .attr({
                     "class": "inner",
-                    "transform": "translate(" + -(length_inner / 2) + "," + -(length_inner / 2) + ")"
+                    "transform": "translate(" + [-radius_pack, -radius_pack] + ")"
                 });
 
         var bubble_inner = d3.layout.pack()
@@ -350,16 +354,35 @@ function(
                     .value();
             })
             .sort(null)
-            .size([length_inner, length_inner])
-            .padding(10);
+            .size([2 * radius_pack, 2 * radius_pack])
+            .padding(padding_pack);
 
         var drag = d3.behavior.drag()
+            .origin(function(d) {
+                return d;
+            })
             .on("drag", function(d) {
-                d.x += d3.event.dx;
-                d.y += d3.event.dy;
-                d3.select(this).attr("transform", function(d) {
-                    return "translate(" + [d.x, d.y] + ")"
-                })
+                var relative_x = d3.event.x - radius_pack,
+                    relative_y = radius_pack - d3.event.y,
+                    new_r = Math.sqrt(Math.pow(relative_x, 2) + Math.pow(relative_y, 2));
+
+                if(new_r >= radius_pack) {
+                    return;
+                }
+                else {
+                    d.x = d3.event.x;
+                    d.y = d3.event.y;
+                    d3.select(this).attr("transform", function(d) {
+                        return "translate(" + [d.x, d.y] + ")";
+                    });
+
+                    //link.attr("d", function(dd) {
+                    //    dd.node_x = relative_x;
+                    //    dd.node_y = relative_y;
+
+                    //    link_d_path(dd);
+                    //});
+                }
             });
 
         var node_inner_g = inner.selectAll("g.node_inner")
@@ -376,10 +399,10 @@ function(
                         return "node_inner " + d.name;
                     },
                     "transform": function(d) {
-                        return "translate(" + d.x + "," + d.y + ")";
+                        return "translate(" + [d.x, d.y] + ")";
                     }
-                })
-            .call(drag);
+                });
+            //.call(drag);
 
         var arc_inner = d3.svg.arc();
 
@@ -433,8 +456,8 @@ function(
                 offset = -Math.PI / 2,
                 path_o_start = d.startAngle + offset,
                 path_o_end   = d.endAngle   + offset,
-                cx_i = -length_inner / 2 + d.node_x,
-                cy_i = -length_inner / 2 + d.node_y,
+                cx_i = -radius_pack + d.node_x,
+                cy_i = -radius_pack + d.node_y,
                 path_i_start = d.inner_startAngle + offset,
                 path_i_end   = d.inner_endAngle   + offset,
                 angle_diff = ((path_o_start + path_o_end) / 2 + (path_i_start + path_i_end) / 2) / 2,
@@ -480,33 +503,38 @@ function(
             });
         }
 
+        function link_data(data) {
+            return pie_outer(data.outer).map(function(d) {
+                var node = bubble_inner.nodes({ children: data.inner })
+                    .filter(function(dd) {
+                        return dd.name === d.data.candidate;
+                    });
+
+                d.node_x = node[0].x;
+                d.node_y = node[0].y;
+                d.node_r = node[0].r;
+
+                var inner = pie_inner(_(data.inner).findWhere({"name": d.data.candidate}).data)
+                    .filter(function(dd) {
+                        return d.data._index === dd.data._index;
+                    });
+
+                d.inner_startAngle = inner[0].startAngle;
+                d.inner_endAngle = inner[0].endAngle;
+
+                return d;
+            });
+        }
+
         var link = middle.selectAll("path")
-            .data(
-                pie_outer(data.outer).map(function(d) {
-                    var node = bubble_inner.nodes({ children: data.inner })
-                        .filter(function(dd) {
-                            return dd.name === d.data.candidate;
-                        });
-
-                    d.node_x = node[0].x;
-                    d.node_y = node[0].y;
-                    d.node_r = node[0].r;
-
-                    var inner = pie_inner(_(data.inner).findWhere({"name": d.data.candidate}).data)
-                        .filter(function(dd) {
-                            return d.data._index === dd.data._index;
-                        });
-
-                    d.inner_startAngle = inner[0].startAngle;
-                    d.inner_endAngle = inner[0].endAngle;
-
-                    return d;
-                })
-            )
+            .data(link_data(data))
             .enter()
             .append("path")
-                .attr("d", function(d) {
-                    return link_d_path(d);
+                .attr({
+                    "d": function(d) {
+                        return link_d_path(d);
+                    },
+                    "class": "link"
                 })
                 .style("opacity", opacity_link)
                 .attr("fill", function(d) {
@@ -709,7 +737,7 @@ function(
                                     adjust = x > 0 ? 5 : -5,
                                     label_x = x + adjust,
                                     label_y = Math.sin(mid_angle) * radius_label;
-                                return "translate(" + label_x + "," + label_y + ")";
+                                return "translate(" + [label_x, label_y] + ")";
                             };
                         });
 
@@ -747,7 +775,7 @@ function(
                     .transition()
                         .duration(transition_duration)
                         .attr("transform", function(d) {
-                            return "translate(" + d.x + "," + d.y + ")"
+                            return "translate(" + [d.x, d.y] + ")"
                         });
 
                 path_inner
@@ -769,28 +797,7 @@ function(
                             };
                         });
 
-                link.data(
-                    pie_outer(data.outer).map(function(d) {
-                        var node = bubble_inner.nodes({ children: data.inner })
-                            .filter(function(dd) {
-                                return dd.name === d.data.candidate;
-                            });
-
-                        d.node_x = node[0].x;
-                        d.node_y = node[0].y;
-                        d.node_r = node[0].r;
-
-                        var inner = pie_inner(_(data.inner).findWhere({"name": d.data.candidate}).data)
-                            .filter(function(dd) {
-                                return d.data._index === dd.data._index;
-                            });
-
-                        d.inner_startAngle = inner[0].startAngle;
-                        d.inner_endAngle = inner[0].endAngle;
-
-                        return d;
-                    })
-                )
+                link.data(link_data(data))
                     .transition()
                         .duration(transition_duration)
                         .attrTween("d", function(d) {
