@@ -10,9 +10,9 @@ function(
 ) {
     var toward = "both",
         margin = {
-            "top": 80,
+            "top": 50,
             "right": 10,
-            "bottom": 80,
+            "bottom": 50,
             "left": 10
         },
         width = 1000 - margin.left - margin.right,
@@ -30,6 +30,27 @@ function(
         label_wrap_length = 150, // wrap to under in px
         label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
         label_relax_sleep = 10; // sleep label_relax() in ms
+
+    var tooltip = d3.select("body")
+        .append("div")
+            .style({
+                "position": "absolute",
+                "z-index": "100",
+                "visibility": "hidden"
+            });
+
+    var tooltip_position = function() {
+        tooltip.style({
+            "top": (event.pageY - 10) + "px",
+            "left": (event.pageX + 10) + "px"
+        });
+    }
+
+    var dollar_format = d3.format("0,000");
+
+    String.prototype.capitalize = function() {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    }
 
     var svg = d3.select("svg#viz_influence")
             .attr({
@@ -81,7 +102,9 @@ function(
             })
             .sort(null);
 
-        function opacity_default() {
+        function mouseout_default() {
+            tooltip.style("visibility", "hidden");
+
             path_outer_g
                 .transition()
                 .style("opacity", 1.0);
@@ -105,6 +128,12 @@ function(
             .append("g")
                 .attr("class", "arc_outer")
                 .on("mouseover", function(d) {
+                    var who = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"];
+
+                    tooltip
+                        .style("visibility", "visible")
+                        .text(who + " spent $" + dollar_format(d.data.spent) + " " + d.data.toward + " " + d.data.candidate.capitalize());
+
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {
@@ -129,7 +158,8 @@ function(
                             return d.data.candidate === dd.name ? 1.0 : opacity_fade;
                         });
                 })
-                .on("mouseout", opacity_default);
+                .on("mousemove", tooltip_position)
+                .on("mouseout", mouseout_default);
 
         var path_outer = path_outer_g
             .append("path")
@@ -423,6 +453,11 @@ function(
             .append("g")
                 .attr("class", "arc_inner")
                 .on("mouseover", function(d) {
+                    var who = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"];
+
+                    tooltip
+                        .style("visibility", "visible")
+                        .text(who + " spent $" + dollar_format(d.data.spent) + " " + d.data.toward + " " + d.data.candidate.capitalize());
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {
@@ -447,7 +482,31 @@ function(
                             return d.data.candidate === dd.name ? 1.0 : opacity_fade;
                         });
                 })
-                .on("mouseout", opacity_default);
+                .on("mousemove", tooltip_position)
+                .on("mouseout", mouseout_default);
+
+        function link_data(data) {
+            return pie_outer(data.outer).map(function(d) {
+                var node = bubble_inner.nodes({ children: data.inner })
+                    .filter(function(dd) {
+                        return dd.name === d.data.candidate;
+                    });
+
+                d.node_x = node[0].x;
+                d.node_y = node[0].y;
+                d.node_r = node[0].r;
+
+                var inner = pie_inner(_(data.inner).findWhere({"name": d.data.candidate}).data)
+                    .filter(function(dd) {
+                        return d.data._index === dd.data._index;
+                    });
+
+                d.inner_startAngle = inner[0].startAngle;
+                d.inner_endAngle = inner[0].endAngle;
+
+                return d;
+            });
+        }
 
         function link_d_path(d) {
             if(d.value === 0) return "";
@@ -486,46 +545,6 @@ function(
             return path.toString();
         }
 
-        function link_data(data) {
-            return pie_outer(data).map(function(d) {
-                d._node = node_i = node_inner_g
-                    .filter(function(dd) {
-                        return dd.name === d.data.candidate;
-                    })
-                    .datum();
-                d._inner = path_i = path_inner_g
-                    .filter(function(dd) {
-                        return dd.data._index === d.data._index;
-                    })
-                    .datum();
-
-                return d;
-            });
-        }
-
-        function link_data(data) {
-            return pie_outer(data.outer).map(function(d) {
-                var node = bubble_inner.nodes({ children: data.inner })
-                    .filter(function(dd) {
-                        return dd.name === d.data.candidate;
-                    });
-
-                d.node_x = node[0].x;
-                d.node_y = node[0].y;
-                d.node_r = node[0].r;
-
-                var inner = pie_inner(_(data.inner).findWhere({"name": d.data.candidate}).data)
-                    .filter(function(dd) {
-                        return d.data._index === dd.data._index;
-                    });
-
-                d.inner_startAngle = inner[0].startAngle;
-                d.inner_endAngle = inner[0].endAngle;
-
-                return d;
-            });
-        }
-
         var link = middle.selectAll("path")
             .data(link_data(data))
             .enter()
@@ -541,6 +560,11 @@ function(
                     return d.data.toward === "supporting" ? "#2ca02c" : "#d62728";
                 })
                 .on("mouseover", function(d) {
+                    var who = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"];
+
+                    tooltip
+                        .style("visibility", "visible")
+                        .text(who + " spent $" + dollar_format(d.data.spent) + " " + d.data.toward + " " + d.data.candidate.capitalize());
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {
@@ -565,7 +589,8 @@ function(
                             return d.data.candidate === dd.name ? 1.0 : opacity_fade;
                         });
                 })
-                .on("mouseout", opacity_default)
+                .on("mouseout", mouseout_default)
+                .on("mousemove", tooltip_position)
                 .each(function(d) {
                     this._current = d;
                 });
@@ -623,6 +648,9 @@ function(
                     return "url(#clip_" + d.name + ")";
                 })
                 .on("mouseover", function(d) {
+                    tooltip
+                        .style("visibility", "visible")
+                        .text("$" + dollar_format(d.value) + " went toward " + d.name.capitalize());
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {
@@ -647,7 +675,8 @@ function(
                             return d.name === dd.name ? 1.0 : opacity_fade;
                         });
                 })
-                .on("mouseout", opacity_default);
+                .on("mousemove", tooltip_position)
+                .on("mouseout", mouseout_default);
 
         d3.selectAll("#toward_controls input")
             .on("change", function() {
