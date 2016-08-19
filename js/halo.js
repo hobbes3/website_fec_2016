@@ -1,4 +1,4 @@
-require([
+define([
     "jquery",
     "d3",
     "d3-path",
@@ -12,95 +12,38 @@ function(
     _,
     helper
 ) {
-    var toward = "both",
-        green = "#2ca02c",
-        red = "#d62728",
-        width = $("#viz_halo").parent().innerWidth(),
-        width = width > 1500 ? 1500 : width,
-        height = width * 0.7,
-        radius = width / 2 * 0.55,
-        radius_label = radius * 1.1, // default radius for label before label_relax()
-        thickness = radius * 0.07,
-        link_radius_cp_offset = radius * 0.2,
-        radius_pack = 0.8 * (radius - thickness),
-        padding_pack = radius * 0.1,
-        transition_duration = 750, // in ms
-        opacity_link = 0.6,
-        opacity_fade = 0.1,
-        label_font_size = height * 0.014,
-        label_spacing = radius * 0.03, // px between the text label and line
-        label_wrap_length = radius * 0.7, // wrap to under in px
-        label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
-        label_relax_sleep = 10; // sleep label_relax() in ms
+    return function(data) {
+        var toward = "both",
+            animation = false,
+            green = data.green,
+            red = data.red,
+            width = $("#viz_halo").parent().innerWidth(),
+            width = width > 1500 ? 1500 : width,
+            height = width * 0.7,
+            radius = width / 2 * 0.55,
+            radius_label = radius * 1.1, // default radius for label before label_relax()
+            thickness = radius * 0.07,
+            link_radius_cp_offset = radius * 0.2,
+            radius_pack = 0.8 * (radius - thickness),
+            padding_pack = radius * 0.1,
+            transition_duration = 750, // in ms
+            opacity_link = 0.6,
+            opacity_fade = 0.1,
+            label_font_size = height * 0.014,
+            label_spacing = radius * 0.03, // px between the text label and line
+            label_wrap_length = radius * 0.7, // wrap to under in px
+            label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
+            label_relax_sleep = 10; // sleep label_relax() in ms
 
-    var color_outer = d3.scale.category20b();
+        var color_outer = d3.scale.category20b();
 
-    var svg = d3.select("svg#viz_halo")
-            .attr({
-                "width": width,
-                "height": height
-            })
-        .append("g")
-            .attr("transform", "translate(" + [width / 2, height / 2] + ")");
-
-    d3.json("/data/schedule_e.json", function(json) {
-        var data = {};
-
-        function by_toward(data, candidate) {
-            return _(data).chain()
-                .groupBy("toward")
-                .map(function(v, k) {
-                    return {
-                        "toward": k,
-                        "total": _(v).total("spent"),
-                        "candidate": candidate
-                    }
+        var svg = d3.select("svg#viz_halo")
+                .attr({
+                    "width": width,
+                    "height": height
                 })
-                .value();
-        };
-
-        _.mixin({
-            "total": function(data, key) {
-                return _(data).chain()
-                    .pluck("spent")
-                    .reduce(function(memo, num) {
-                        return memo + parseInt(num);
-                    }, 0)
-                    .value();
-            }
-        });
-
-        data.stats = {
-            "total": _(json.results).total("spent"),
-            "toward": by_toward(json.results, null),
-            "candidate": _(json.results).chain()
-                    .groupBy("candidate")
-                    .map(function(v, k) {
-                        return {
-                            "candidate": k,
-                            "total": _(v).total("spent"),
-                            "toward": by_toward(v, k)
-                        };
-                    })
-                    .value()
-        };
-
-        data.outer = _(json.results).map(function(v, i) {
-            v.spent = parseInt(v.spent);
-            v._index = i;
-
-            return v;
-        });
-
-        data.inner = _(data.outer).chain()
-            .groupBy("candidate")
-            .map(function(v, k) {
-                return {
-                    "candidate": k,
-                    "data": v
-                };
-            })
-            .value();
+            .append("g")
+                .attr("transform", "translate(" + [width / 2, height / 2] + ")");
 
         var outer = svg
             .append("g")
@@ -117,6 +60,8 @@ function(
             .sort(null);
 
         function mouseout_default() {
+            if(animation) return;
+
             helper.tooltip.style("visibility", "hidden");
 
             path_outer_g
@@ -142,6 +87,8 @@ function(
             .append("g")
                 .attr("class", "arc_outer")
                 .on("mouseover", function(d) {
+                    if(animation) return;
+
                     var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
                         toward = d.data.toward,
                         candidate = d.data.candidate,
@@ -484,6 +431,8 @@ function(
                     }
                 })
                 .on("mouseover", function(d) {
+                    if(animation) return;
+
                     var spent = d.value,
                         total = data.stats.total,
                         pct = spent / total * 100;
@@ -549,6 +498,8 @@ function(
             .append("g")
                 .attr("class", "arc_inner")
                 .on("mouseover", function(d) {
+                    if(animation) return;
+
                     var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
                         toward = d.data.toward,
                         candidate = d.data.candidate,
@@ -671,6 +622,8 @@ function(
                     return d.data.toward === "supporting" ? green : red;
                 })
                 .on("mouseover", function(d) {
+                    if(animation) return;
+
                     var who = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"];
 
                     helper.tooltip
@@ -729,6 +682,8 @@ function(
                 if(toward === toward_previous) {
                     return;
                 }
+
+                animation = true;
 
                 path_outer.data(pie_outer(data.outer))
                     .transition()
@@ -840,7 +795,10 @@ function(
                                 return x > 0 ? "start" : "end";
                             };
                         })
-                        .call(end_all, label_relax);
+                        .call(end_all, function() {
+                            animation = false;
+                            label_relax();
+                        });
 
                 node_inner_g
                     .data(
@@ -902,6 +860,7 @@ function(
                                 return 2 * (d.r - thickness);
                             }
                         });
+
             });
-    });
+    };
 });

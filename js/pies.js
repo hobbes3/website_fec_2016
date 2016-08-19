@@ -1,4 +1,4 @@
-require([
+define([
     "jquery",
     "d3",
     "underscore",
@@ -10,50 +10,20 @@ function(
     _,
     helper
 ) {
-    var green = "#2ca02c",
-        red = "#d62728",
-        width = $("#viz_pies").parent().innerWidth(),
-        width = width > 800 ? 800 : width,
-        height = width * 0.4,
-        radius = height / 2 * 0.8,
-        thickness = radius * 0.2;
+    return function(data) {
+        var green = data.green,
+            red = data.red,
+            width = $("#viz_pies").parent().innerWidth(),
+            width = width > 800 ? 800 : width,
+            height = width * 0.4,
+            radius = height / 2 * 0.8,
+            thickness = radius * 0.2;
 
-    var svg = d3.select("svg#viz_pies")
-            .attr({
-                "width": width,
-                "height": height
-            });
-
-    d3.json("/data/schedule_e.json", function(json) {
-        var data = {};
-
-        function by_toward(data, candidate) {
-            return _(data).chain()
-                .groupBy("toward")
-                .map(function(v, k) {
-                    return {
-                        "toward": k,
-                        "total": _(v).total("spent"),
-                        "candidate": candidate
-                    }
-                })
-                .value();
-        };
-
-        data.stats = {
-            "total": _(json.results).total("spent"),
-            "toward": by_toward(json.results, null),
-            "candidate": _(json.results).chain()
-                    .groupBy("candidate")
-                    .map(function(v, k) {
-                        return {
-                            "candidate": k,
-                            "total": _(v).total("spent"),
-                            "toward": by_toward(v, k)
-                        };
-                    })
-                    .value()
-        };
+        var svg = d3.select("svg#viz_pies")
+                .attr({
+                    "width": width,
+                    "height": height
+                });
 
         var pie = d3.layout.pie()
             .value(function(d) {
@@ -149,5 +119,5 @@ function(
                 .on("mouseout", function(d) {
                     helper.tooltip.style("visibility", "hidden");
                 });
-    });
+    };
 });

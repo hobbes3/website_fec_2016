@@ -29,54 +29,5 @@ function(
         return pct < 1 ? "<1%" : Math.round(pct) + "%";
     }
 
-    _.mixin({
-        "total": function(data, key) {
-            return _(data).chain()
-                .pluck("spent")
-                .reduce(function(memo, num) {
-                    return memo + parseInt(num);
-                }, 0)
-                .value();
-        }
-    });
-
-    d3.json("/data/schedule_e.json", function(json) {
-        var data = {};
-
-        data.total = _(json.results).chain()
-            .pluck("spent")
-            .reduce(function(memo, num) {
-                return memo + parseInt(num);
-            }, 0)
-            .value();
-
-        data.outer = _(json.results).map(function(v, i) {
-            v.spent = parseInt(v.spent);
-            v._index = i;
-
-            return v;
-        });
-
-        data.inner = _(data.outer).chain()
-            .groupBy("candidate")
-            .map(function(v, k) {
-                return {
-                    "name": k,
-                    "total": _(v).chain()
-                        .pluck("spent")
-                        .reduce(function(memo, num) {
-                            return memo + parseInt(num);
-                        }, 0)
-                        .value(),
-                    "data": v
-                };
-            })
-            .value();
-
-        helper.data = data;
-
-        //return helper;
-    });
-
     return helper;
 });
