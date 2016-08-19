@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import json
+import urllib2
 import splunklib.results as results
 import splunklib.client as client
 
@@ -52,3 +53,18 @@ latest_result = service.jobs.oneshot(latest_query, **kwargs_oneshot)
 f = open("/data/www/data/schedule_e_latest.json", "w")
 
 print(latest_result, file=f)
+
+attempts = 0
+
+while attempts < 3:
+    try:
+        response = urllib2.urlopen("http://elections.huffingtonpost.com/pollster/api/charts/2016-general-election-trump-vs-clinton", timeout=5)
+        content = response.read()
+
+        f = open("/data/www/data/polls.json", "w")
+        f.write(content)
+        f.close()
+        break
+    except urllib2.URLError as e:
+        attempts += 1
+        print(type(e))
