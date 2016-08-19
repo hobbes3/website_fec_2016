@@ -13,12 +13,11 @@ function(
     helper
 ) {
     return function(data) {
-        var toward = "both",
+        var toward_option = "both",
             animation = false,
             green = data.green,
             red = data.red,
-            width = $("#viz_halo").parent().innerWidth(),
-            width = width > 1500 ? 1500 : width,
+            width = Math.min($("#viz_halo").parent().innerWidth(), 1500),
             height = width * 0.7,
             radius = width / 2 * 0.55,
             radius_label = radius * 1.1, // default radius for label before label_relax()
@@ -30,7 +29,7 @@ function(
             opacity_link = 0.6,
             opacity_fade = 0.1,
             label_font_size = height * 0.014,
-            label_spacing = radius * 0.03, // px between the text label and line
+            label_spacing = radius * 0.01, // px between the text label and line
             label_wrap_length = radius * 0.7, // wrap to under in px
             label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
             label_relax_sleep = 10; // sleep label_relax() in ms
@@ -55,7 +54,7 @@ function(
 
         var pie_outer = d3.layout.pie()
             .value(function(d) {
-                return d.toward === toward || toward === "both" ? d.spent : 0;
+                return d.toward === toward_option || toward_option === "both" ? d.spent : 0;
             })
             .sort(null);
 
@@ -100,7 +99,7 @@ function(
                         pct_toward = spent / total_toward * 100;
 
                     var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
-                    html += toward === "both" ?
+                    html += toward_option === "both" ?
                         "<br>" + helper.pct_label(pct) + " of total expenditures"
                         : "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
 
@@ -352,7 +351,7 @@ function(
             .value(function(d) {
                 return _(d.data).chain()
                     .filter(function(v) {
-                        return v.toward === toward || toward === "both";
+                        return v.toward === toward_option || toward_option === "both";
                     })
                     .pluck("spent")
                     .reduce(function(memo, num) {
@@ -435,18 +434,20 @@ function(
 
                     var spent = d.value,
                         total = data.stats.total,
-                        pct = spent / total * 100;
+                        pct = spent / total * 100,
+                        html;
 
-                    var html = "$" + helper.dollar_format(d.value) + " went toward " + d.candidate.capitalize() + "<br>";
 
-                    if(toward === "both") {
-                        html += helper.pct_label(pct) + " of total expenditures";
+                    if(toward_option === "both") {
+                        html = "$" + helper.dollar_format(d.value) + " went toward " + d.candidate.capitalize() + "<br>" +
+                            helper.pct_label(pct) + " of total expenditures";
                     }
                     else {
-                        total_toward = _(data.stats.toward).findWhere({"toward": toward}).total,
+                        total_toward = _(data.stats.toward).findWhere({"toward": toward_option}).total,
                         pct_toward = spent / total_toward * 100;
 
-                        html += helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
+                        html = "$" + helper.dollar_format(d.value) + " went " + toward_option + " " + d.candidate.capitalize() + "<br>" +
+                            helper.pct_label(pct_toward) + " of total expenditures " + toward_option + " a candidate";
                     }
 
                     helper.tooltip
@@ -484,7 +485,7 @@ function(
 
         var pie_inner = d3.layout.pie()
             .value(function(d) {
-                return d.toward === toward || toward === "both" ? d.spent : 0;
+                return d.toward === toward_option || toward_option === "both" ? d.spent : 0;
             })
             .sort(null);
 
@@ -513,7 +514,7 @@ function(
 
                     var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
 
-                    html += toward === "both" ?
+                    html += toward_option === "both" ?
                         "<br>" + helper.pct_label(pct) + " of total expenditures spent on " + name :
                         "<br>" + helper.pct_label(pct_toward) + " of total expenditures spent " + toward + " " + name;
 
@@ -677,10 +678,10 @@ function(
 
         d3.selectAll("#toward_controls button")
             .on("click", function() {
-                var toward_previous = toward;
-                toward = this.value;
+                var toward_option_previous = toward_option;
+                toward_option = this.value;
 
-                if(toward === toward_previous) {
+                if(toward_option === toward_option_previous) {
                     return;
                 }
 
@@ -702,11 +703,11 @@ function(
                     .transition()
                         .duration(transition_duration)
                         .style("opacity", function(d) {
-                            return d.data.toward === toward || toward === "both" ? 1.0 : 0.0;
+                            return d.data.toward === toward_option || toward_option === "both" ? 1.0 : 0.0;
                         })
                         .each("end", function() {
                             d3.select(this).attr("visibility", function(d) {
-                                return d.data.toward === toward || toward === "both" ? "visible" : "hidden";
+                                return d.data.toward === toward_option || toward_option === "both" ? "visible" : "hidden";
                             });
                         });
 
@@ -798,6 +799,7 @@ function(
                         })
                         .call(end_all, function() {
                             animation = false;
+                            mouseout_default();
                             label_relax();
                         });
 
