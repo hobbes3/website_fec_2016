@@ -451,7 +451,8 @@ function(
 
                     helper.tooltip
                         .style("visibility", "visible")
-                        .html(html)
+                        .html(html);
+
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {

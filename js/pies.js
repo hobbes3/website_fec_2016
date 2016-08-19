@@ -88,6 +88,15 @@ function(
                     "xlink:href": function(d) {
                         return "/images/" + d.candidate + "_head.png";
                     }
+                })
+                .on("mouseover", function(d) {
+                    helper.tooltip
+                        .style("visibility", "visible")
+                        .text(d.candidate.capitalize());
+                })
+                .on("mousemove", helper.tooltip_position)
+                .on("mouseout", function(d) {
+                    helper.tooltip.style("visibility", "hidden");
                 });
 
         var arc = pie_data

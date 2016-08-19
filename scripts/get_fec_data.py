@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+import json
 import splunklib.results as results
 import splunklib.client as client
 
-HOST = "dev.splunk4good.com"
-PORT = 8089
-USERNAME = "fec"
-PASSWORD = "changemefec"
-APP = "fec"
+with open("config.json") as data_file:
+    config = json.load(data_file)
 
 # Create a Service instance and log in
 service = client.connect(
-    host=HOST,
-    port=PORT,
-    username=USERNAME,
-    password=PASSWORD
+    host=config["host"],
+    port=config["port"],
+    username=config["username"],
+    password=config["password"]
 )
 
 kwargs_oneshot = {
@@ -36,7 +34,7 @@ f = open("/data/www/data/schedule_e_stats.json", "w")
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | eval spent=round(expenditure_amount) | rex field=source "(?<candidate>\w+)_schedule" | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | eval id=candidate.":".toward | timechart sum(spent) by id | fillnull
+search index=fec sourcetype=fec_schedule_e committee_id=* | eval spent=round(expenditure_amount) | rex field=source "(?<candidate>\w+)_schedule" | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | eval id=candidate.":".toward | timechart span=1w sum(spent) by id | fillnull
 """
 
 timechart_result = service.jobs.oneshot(timechart_query, **kwargs_oneshot)
