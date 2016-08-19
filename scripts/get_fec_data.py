@@ -5,7 +5,7 @@ import json
 import splunklib.results as results
 import splunklib.client as client
 
-with open("config.json") as data_file:
+with open("/data/www/scripts/config.json") as data_file:
     config = json.load(data_file)
 
 # Create a Service instance and log in
