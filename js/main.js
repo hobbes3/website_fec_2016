@@ -1,20 +1,20 @@
 require([
     "jquery",
     "d3",
-    "d3-queue",
     "underscore",
     "moment",
     "js/helper",
+    "js/timecharts",
     "js/halo",
     "js/pies"
 ],
 function(
     $,
     d3,
-    d3_queue,
     _,
     moment,
     helper,
+    timecharts,
     halo,
     pies
 ) {
@@ -23,7 +23,7 @@ function(
         "red": "#d62728"
     };
 
-    d3_queue()
+    d3.queue()
         .defer(d3.json, "/data/schedule_e_latest.json")
         .defer(d3.json, "/data/schedule_e_stats.json")
         .defer(d3.json, "/data/schedule_e_timechart.json")
@@ -104,6 +104,7 @@ function(
 
         $("#total").text("$" + helper.dollar_format(data.stats.total));
 
+        timecharts(data);
         pies(data);
         halo(data);
     }

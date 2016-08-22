@@ -13,19 +13,16 @@ function(
     return function(data) {
         var green = data.green,
             red = data.red,
-            width = $("#viz_pies").parent().innerWidth(),
-            width = width > 800 ? 800 : width,
+            width = Math.min($("#viz_pies").parent().innerWidth(), 850),
             height = width * 0.4,
             radius = height / 2 * 0.8,
             thickness = radius * 0.2;
 
         var svg = d3.select("svg#viz_pies")
-                .attr({
-                    "width": width,
-                    "height": height
-                });
+            .attr("width", width)
+            .attr("height", height);
 
-        var pie = d3.layout.pie()
+        var pie = d3.pie()
             .value(function(d) {
                 return d.total;
             })
@@ -33,7 +30,7 @@ function(
                 return d3.descending(a.toward, b.toward);
             });
 
-        var arc = d3.svg.arc()
+        var arc = d3.arc()
             .innerRadius(radius - thickness)
             .outerRadius(radius);
 
@@ -41,24 +38,20 @@ function(
             .data(data.stats.candidate)
             .enter()
             .append("g")
-                .attr({
-                    "class": "candidate",
-                    "transform": function(d, i) {
-                        var x = (2 * i + 1) * width / (2 * data.stats.candidate.length);
-                        var y = height * 0.8 / 2;
+                .attr("class", "candidate")
+                .attr("transform", function(d, i) {
+                    var x = (2 * i + 1) * width / (2 * data.stats.candidate.length);
+                    var y = height * 0.8 / 2;
 
-                        return "translate(" + [x, y] + ")";
-                    }
+                    return "translate(" + [x, y] + ")";
                 });
 
         var text = candidate_g
             .append("text")
-                .attr({
-                    "class": "candidate_total",
-                    "x": 0,
-                    "y": radius * 1.25,
-                    "text-anchor": "middle"
-                })
+                .attr("class", "candidate_total")
+                .attr("x", 0)
+                .attr("y", radius * 1.25)
+                .attr("text-anchor", "middle")
                 .style("font-size", height * 0.09)
                 .text(function(d) {
                     return "$" + helper.dollar_format(d.total) + " spent on " + d.candidate.capitalize();
@@ -72,22 +65,20 @@ function(
 
         var image = candidate_g
             .append("image")
-                .attr({
-                    "x": function(d) {
-                        return thickness - radius;
-                    },
-                    "y": function(d) {
-                        return thickness - radius;
-                    },
-                    "width": function(d) {
-                        return 2 * (radius - thickness);
-                    },
-                    "height": function(d) {
-                        return 2 * (radius - thickness);
-                    },
-                    "xlink:href": function(d) {
-                        return "/images/" + d.candidate + "_head.png";
-                    }
+                .attr("x", function(d) {
+                    return thickness - radius;
+                })
+                .attr("y", function(d) {
+                    return thickness - radius;
+                })
+                .attr("width", function(d) {
+                    return 2 * (radius - thickness);
+                })
+                .attr("height", function(d) {
+                    return 2 * (radius - thickness);
+                })
+                .attr("xlink:href", function(d) {
+                    return "/images/" + d.candidate + "_head.png";
                 })
                 .on("mouseover", function(d) {
                     helper.tooltip
@@ -99,13 +90,11 @@ function(
                     helper.tooltip.style("visibility", "hidden");
                 });
 
-        var arc = pie_data
+        var arc_path = pie_data
             .append("path")
-                .attr({
-                    "class": "arc",
-                    "d": function(d) {
-                        return arc(d);
-                    }
+                .attr("class", "arc")
+                .attr("d", function(d) {
+                    return arc(d);
                 })
                 .style("fill", function(d) {
                     return d.data.toward === "supporting" ? green : red;

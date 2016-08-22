@@ -2,12 +2,26 @@
     font-size: 1.2em;
 }
 
+.no-padding-top {
+    padding-top: 0px;
+}
+
 #tooltip {
     font-size: 1.2em;
     position: absolute;
     z-index: 100;
     visibility: hidden;
     background-color: black;
+}
+
+.center {
+    display: block;
+    margin: 0 auto;
+}
+
+.full-width {
+    margin-left: 0%; !important;
+    width: 100%; !important;
 }
 
 .btn-red {
@@ -82,12 +96,8 @@ text {
 .label-circle {
     fill: #fff;
 }
+
 path {
     stroke: #363636;
     stroke-width: 1px;
-}
-
-.center {
-    display: block;
-    margin: 0 auto;
 }

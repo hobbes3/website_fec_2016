@@ -1,14 +1,12 @@
 define([
     "jquery",
     "d3",
-    "d3-path",
     "underscore",
     "js/helper"
 ],
 function(
     $,
     d3,
-    d3_path,
     _,
     helper
 ) {
@@ -25,22 +23,21 @@ function(
             link_radius_cp_offset = radius * 0.2,
             radius_pack = 0.8 * (radius - thickness),
             padding_pack = radius * 0.1,
-            transition_duration = 750, // in ms
             opacity_link = 0.6,
             opacity_fade = 0.1,
             label_font_size = height * 0.014,
             label_spacing = radius * 0.01, // px between the text label and line
             label_wrap_length = radius * 0.7, // wrap to under in px
             label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
-            label_relax_sleep = 10; // sleep label_relax() in ms
+            label_relax_sleep = 10, // sleep label_relax() in ms
+            transition_duration = 750, // in ms
+            t = d3.transition().duration(transition_duration);
 
-        var color_outer = d3.scale.category20b();
+        var color_outer = d3.scaleOrdinal(d3.schemeCategory20b);
 
         var svg = d3.select("svg#viz_halo")
-                .attr({
-                    "width": width,
-                    "height": height
-                })
+                .attr("width", width)
+                .attr("height", height)
             .append("g")
                 .attr("transform", "translate(" + [width / 2, height / 2] + ")");
 
@@ -48,11 +45,11 @@ function(
             .append("g")
                 .attr("class", "outer");
 
-        var arc_outer = d3.svg.arc()
+        var arc_outer = d3.arc()
             .innerRadius(radius - thickness)
             .outerRadius(radius);
 
-        var pie_outer = d3.layout.pie()
+        var pie_outer = d3.pie()
             .value(function(d) {
                 return d.toward === toward_option || toward_option === "both" ? d.spent : 0;
             })
@@ -128,7 +125,7 @@ function(
                     image
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.data.candidate === dd.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
                 })
                 .on("mousemove", helper.tooltip_position)
@@ -146,66 +143,58 @@ function(
 
         var label_outer = outer.selectAll("g.arc_outer")
             .append("g")
-                .attr({
-                    "class": "label",
-                    "visibility": "visible"
-                });
+                .attr("class", "label")
+                .attr("visibility", "visible");
 
         var label_circle = label_outer
             .append("circle")
-                .attr({
-                    "x": 0,
-                    "y": 0,
-                    "r": 2,
-                    "transform": function (d, i) {
-                        return "translate(" + arc_outer.centroid(d) + ")";
-                    },
-                    "class": "label-circle"
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("r", 2)
+                .attr("transform", function (d, i) {
+                    return "translate(" + arc_outer.centroid(d) + ")";
                 })
+                .attr("class", "label-circle")
                 .each(function(d) {
                     this._current = d;
                 });
 
         var label_line = label_outer
             .append("line")
-                .attr({
-                    "x1": function (d) {
-                        return arc_outer.centroid(d)[0];
-                    },
-                    "y1": function (d) {
-                        return arc_outer.centroid(d)[1];
-                    },
-                    "x2": function (d) {
-                        var c = arc_outer.centroid(d),
-                            mid_angle = Math.atan2(c[1], c[0]),
-                            x = Math.cos(mid_angle) * radius_label;
-                        return x;
-                    },
-                    "y2": function (d) {
-                        var c = arc_outer.centroid(d),
-                            mid_angle = Math.atan2(c[1], c[0]),
-                            y = Math.sin(mid_angle) * radius_label;
-                        return y;
-                    },
-                    "class": "label-line"
+                .attr("x1", function (d) {
+                    return arc_outer.centroid(d)[0];
                 })
+                .attr("y1", function (d) {
+                    return arc_outer.centroid(d)[1];
+                })
+                .attr("x2", function (d) {
+                    var c = arc_outer.centroid(d),
+                        mid_angle = Math.atan2(c[1], c[0]),
+                        x = Math.cos(mid_angle) * radius_label;
+                    return x;
+                })
+                .attr("y2", function (d) {
+                    var c = arc_outer.centroid(d),
+                        mid_angle = Math.atan2(c[1], c[0]),
+                        y = Math.sin(mid_angle) * radius_label;
+                    return y;
+                })
+                .attr("class", "label-line")
                 .each(function(d) {
                     this._current = d;
                 });
 
         var label_text_g = label_outer
             .append("g")
-                .attr({
-                    "class": "label-text-group",
-                    "transform": function(d) {
-                        var c = arc_outer.centroid(d),
-                            mid_angle = Math.atan2(c[1], c[0]),
-                            x = Math.cos(mid_angle) * radius_label,
-                            sign = (x > 0) ? 1 : -1,
-                            label_x = x + (2 * sign),
-                            label_y = Math.sin(mid_angle) * radius_label;
-                        return "translate(" + [label_x, label_y] + ")";
-                    }
+                .attr("class", "label-text-group")
+                .attr("transform", function(d) {
+                    var c = arc_outer.centroid(d),
+                        mid_angle = Math.atan2(c[1], c[0]),
+                        x = Math.cos(mid_angle) * radius_label,
+                        sign = (x > 0) ? 1 : -1,
+                        label_x = x + (2 * sign),
+                        label_y = Math.sin(mid_angle) * radius_label;
+                    return "translate(" + [label_x, label_y] + ")";
                 })
                 .each(function(d) {
                     this._current = d;
@@ -213,30 +202,29 @@ function(
 
         var label_text = label_text_g
             .append("text")
-                .attr({
-                    "x": 0,
-                    "y": 0,
-                    "dy": "0em",
-                    "text-anchor": function (d) {
-                        var c = arc_outer.centroid(d),
-                            mid_angle = Math.atan2(c[1], c[0]),
-                            x = Math.cos(mid_angle) * radius_label;
-                        return (x > 0) ? "start" : "end";
-                    },
-                    "dominant-baseline": "middle",
-                    "class": "label-text"
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("dy", "0em")
+                .attr("text-anchor", function (d) {
+                    var c = arc_outer.centroid(d),
+                        mid_angle = Math.atan2(c[1], c[0]),
+                        x = Math.cos(mid_angle) * radius_label;
+                    return (x > 0) ? "start" : "end";
                 })
+                .attr("dominant-baseline", "middle")
+                .attr("class", "label-text")
                 .style("font-size", label_font_size)
                 .text(function (d) {
                     return d.data["committee.name"];
                 })
                 .each(function(d) {
                     this._current = d;
-                });
+                })
+                .call(label_wrap, label_wrap_length);
 
-        label_text.call(label_wrap, label_wrap_length);
         label_relax();
 
+        // https://bl.ocks.org/mbostock/7555321
         function label_wrap(text, width) {
             text.each(function() {
                 var text = d3.select(this),
@@ -250,11 +238,9 @@ function(
                     dy = parseFloat(text.attr("dy")),
                     tspan = text.text(null)
                         .append("tspan")
-                            .attr({
-                                "x": 0,
-                                "y": 0,
-                                "dy": dy + "em"
-                            });
+                            .attr("x", 0)
+                            .attr("y", 0)
+                            .attr("dy", dy + "em");
                 while(word = words.pop()) {
                     line.push(word);
                     tspan.text(line.join(" "));
@@ -265,11 +251,9 @@ function(
                         line = [word];
                         tspan = text
                             .append("tspan")
-                                .attr({
-                                    "x": 0,
-                                    "y": 0,
-                                    "dy": ++lineNumber * lineHeight + dy + "em"
-                                })
+                                .attr("x", 0)
+                                .attr("y", 0)
+                                .attr("dy", ++lineNumber * lineHeight + dy + "em")
                                 .text(word);
 
                     }
@@ -277,6 +261,12 @@ function(
             });
         }
 
+        function get_translate(translate) {
+            var match = /^translate\(([^,]+),(.+)\)/.exec(translate);
+            return [parseFloat(match[1]), parseFloat(match[2])];
+        }
+
+        // Based off of https://jsfiddle.net/thudfactor/HdwTH/
         function label_relax() {
             var adjusted = false;
             label_text_g
@@ -303,18 +293,20 @@ function(
                                 rb = b.getBoundingClientRect();
 
                             var overlap = ra.top - label_spacing < rb.bottom &&
-                                        rb.top - label_spacing < ra.bottom &&
-                                        ra.left - label_spacing < rb.right &&
-                                        rb.left - label_spacing < ra.right;
+                                          rb.top - label_spacing < ra.bottom &&
+                                          ra.left - label_spacing < rb.right &&
+                                          rb.left - label_spacing < ra.right;
 
                             if(!overlap) return;
 
                             adjusted = true;
 
-                            var xa = d3.transform(da.attr("transform")).translate[0],
-                                ya = d3.transform(da.attr("transform")).translate[1],
-                                xb = d3.transform(db.attr("transform")).translate[0],
-                                yb = d3.transform(db.attr("transform")).translate[1],
+                            var fa = get_translate(da.attr("transform")),
+                                fb = get_translate(db.attr("transform")),
+                                xa = fa[0],
+                                ya = fa[1],
+                                xb = fb[0],
+                                yb = fb[1],
                                 aa = da.datum().endAngle,
                                 ab = db.datum().endAngle;
 
@@ -327,8 +319,10 @@ function(
 
             if(adjusted) {
                 label_line.attr("y2", function(d, i) {
-                    var label_for_line = d3.select(label_text[0][i].parentNode),
-                        y = d3.transform(label_for_line.attr("transform")).translate[1];
+                    var g_for_line = label_text_g.filter(function(dd, ii) {
+                        return i === ii;
+                    });
+                        y = get_translate(g_for_line.attr("transform"))[1];
                     return y;
                 });
 
@@ -342,13 +336,43 @@ function(
 
         var inner = svg
             .append("g")
-                .attr({
-                    "class": "inner",
-                    "transform": "translate(" + [-radius_pack, -radius_pack] + ")"
-                });
+                .attr("class", "inner")
+                .attr("transform", "translate(" + [-radius_pack, -radius_pack] + ")");
 
-        var bubble_inner = d3.layout.pack()
-            .value(function(d) {
+        //var drag = d3.drag()
+        //    .origin(function(d) {
+        //        return d;
+        //    })
+        //    .on("drag", function(d) {
+        //        var relative_x = d3.event.x - radius_pack,
+        //            relative_y = radius_pack - d3.event.y,
+        //            new_r = Math.sqrt(Math.pow(relative_x, 2) + Math.pow(relative_y, 2));
+
+        //        if(new_r >= radius_pack) {
+        //            return;
+        //        }
+        //        else {
+        //            d.x = d3.event.x;
+        //            d.y = d3.event.y;
+        //            d3.select(this).attr("transform", function(d) {
+        //                return "translate(" + [d.x, d.y] + ")";
+        //            });
+
+        //            //link.attr("d", function(dd) {
+        //            //    dd.node_x = relative_x;
+        //            //    dd.node_y = relative_y;
+
+        //            //    link_d_path(dd);
+        //            //});
+        //        }
+        //    });
+
+        var bubble_inner = d3.pack()
+            .size([2 * radius_pack, 2 * radius_pack])
+            .padding(padding_pack);
+
+        var root = d3.hierarchy({"children": data.inner})
+            .sum(function(d) {
                 return _(d.data).chain()
                     .filter(function(v) {
                         return v.toward === toward_option || toward_option === "both";
@@ -358,95 +382,56 @@ function(
                         return memo + num;
                     }, 0)
                     .value();
-            })
-            .sort(null)
-            .size([2 * radius_pack, 2 * radius_pack])
-            .padding(padding_pack);
-
-        var drag = d3.behavior.drag()
-            .origin(function(d) {
-                return d;
-            })
-            .on("drag", function(d) {
-                var relative_x = d3.event.x - radius_pack,
-                    relative_y = radius_pack - d3.event.y,
-                    new_r = Math.sqrt(Math.pow(relative_x, 2) + Math.pow(relative_y, 2));
-
-                if(new_r >= radius_pack) {
-                    return;
-                }
-                else {
-                    d.x = d3.event.x;
-                    d.y = d3.event.y;
-                    d3.select(this).attr("transform", function(d) {
-                        return "translate(" + [d.x, d.y] + ")";
-                    });
-
-                    //link.attr("d", function(dd) {
-                    //    dd.node_x = relative_x;
-                    //    dd.node_y = relative_y;
-
-                    //    link_d_path(dd);
-                    //});
-                }
             });
 
         var node_inner_g = inner.selectAll("g.node_inner")
-            .data(
-                bubble_inner.nodes({ children: data.inner })
-                    .filter(function(d) {
-                        return !d.children;
-                    })
-            )
+            .data(bubble_inner(root).children)
             .enter()
             .append("g")
-                .attr({
-                    "class": function(d) {
-                        return "node_inner " + d.candidate;
-                    },
-                    "transform": function(d) {
-                        return "translate(" + [d.x, d.y] + ")";
-                    }
+                .attr("class", function(d) {
+                    return "node_inner " + d.candidate;
+                })
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")";
                 });
             //.call(drag);
 
         var image = node_inner_g
             .append("image")
-                .attr({
-                    "x": function(d) {
-                        return thickness - d.r;
-                    },
-                    "y": function(d) {
-                        return thickness - d.r;
-                    },
-                    "width": function(d) {
-                        return 2 * (d.r - thickness);
-                    },
-                    "height": function(d) {
-                        return 2 * (d.r - thickness);
-                    },
-                    "xlink:href": function(d) {
-                        return "/images/" + d.candidate + "_head.png";
-                    }
+                .attr("x", function(d) {
+                    return thickness - d.r;
+                })
+                .attr("y", function(d) {
+                    return thickness - d.r;
+                })
+                .attr("width", function(d) {
+                    return 2 * (d.r - thickness);
+                })
+                .attr("height", function(d) {
+                    return 2 * (d.r - thickness);
+                })
+                .attr("xlink:href", function(d) {
+                    return "/images/" + d.data.candidate + "_head.png";
                 })
                 .on("mouseover", function(d) {
                     if(animation) return;
 
-                    var spent = d.value,
+                    var name = d.data.candidate.capitalize(),
+                        spent = d.value,
                         total = data.stats.total,
                         pct = spent / total * 100,
                         html;
 
 
                     if(toward_option === "both") {
-                        html = "$" + helper.dollar_format(d.value) + " went toward " + d.candidate.capitalize() + "<br>" +
+                        html = "$" + helper.dollar_format(d.value) + " went toward " + name + "<br>" +
                             helper.pct_label(pct) + " of total expenditures";
                     }
                     else {
                         total_toward = _(data.stats.toward).findWhere({"toward": toward_option}).total,
                         pct_toward = spent / total_toward * 100;
 
-                        html = "$" + helper.dollar_format(d.value) + " went " + toward_option + " " + d.candidate.capitalize() + "<br>" +
+                        html = "$" + helper.dollar_format(d.value) + " went " + toward_option + " " + name + "<br>" +
                             helper.pct_label(pct_toward) + " of total expenditures " + toward_option + " a candidate";
                     }
 
@@ -457,33 +442,33 @@ function(
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.candidate === dd.data.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
 
                     link
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.candidate === dd.data.candidate ? opacity_link : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? opacity_link : opacity_fade;
                         });
 
                     path_inner_g
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.candidate === dd.data.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
 
                     image
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.candidate === dd.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
                 })
                 .on("mousemove", helper.tooltip_position)
                 .on("mouseout", mouseout_default);
 
-        var arc_inner = d3.svg.arc();
+        var arc_inner = d3.arc();
 
-        var pie_inner = d3.layout.pie()
+        var pie_inner = d3.pie()
             .value(function(d) {
                 return d.toward === toward_option || toward_option === "both" ? d.spent : 0;
             })
@@ -491,7 +476,7 @@ function(
 
         var path_inner_g = node_inner_g.selectAll("g.arc_inner")
             .data(function(d) {
-                return pie_inner(d.data).map(function(m) {
+                return pie_inner(d.data.data).map(function(m) {
                     m.r = d.r;
                     return m;
                 });
@@ -543,7 +528,7 @@ function(
                     image
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.data.candidate === dd.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
                 })
                 .on("mousemove", helper.tooltip_position)
@@ -551,9 +536,10 @@ function(
 
         function link_data(data) {
             return pie_outer(data.outer).map(function(d) {
-                var node = bubble_inner.nodes({ children: data.inner })
+
+                var node = bubble_inner(root).children
                     .filter(function(dd) {
-                        return dd.candidate === d.data.candidate;
+                        return dd.data.candidate === d.data.candidate;
                     });
 
                 d.node_x = node[0].x;
@@ -585,7 +571,7 @@ function(
                 path_i_end   = d.inner_endAngle   + offset,
                 angle_diff = ((path_o_start + path_o_end) / 2 + (path_i_start + path_i_end) / 2) / 2,
                 r_i = d.node_r,
-                path = d3_path.path();
+                path = d3.path();
 
             path.arc(0, 0, r_o, path_o_start, path_o_end);
             path.bezierCurveTo(
@@ -613,12 +599,10 @@ function(
             .data(link_data(data))
             .enter()
             .append("path")
-                .attr({
-                    "d": function(d) {
-                        return link_d_path(d);
-                    },
-                    "class": "link"
+                .attr("d", function(d) {
+                    return link_d_path(d);
                 })
+                .attr("class", "link")
                 .style("opacity", opacity_link)
                 .attr("fill", function(d) {
                     return d.data.toward === "supporting" ? green : red;
@@ -652,7 +636,7 @@ function(
                     image
                         .transition()
                         .style("opacity", function(dd) {
-                            return d.data.candidate === dd.candidate ? 1.0 : opacity_fade;
+                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
                         });
                 })
                 .on("mouseout", mouseout_default)
@@ -688,8 +672,7 @@ function(
                 animation = true;
 
                 path_outer.data(pie_outer(data.outer))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("d", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -700,20 +683,18 @@ function(
 
                 label_outer
                     .attr("visibility", "visible")
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .style("opacity", function(d) {
                             return d.data.toward === toward_option || toward_option === "both" ? 1.0 : 0.0;
                         })
-                        .each("end", function() {
+                        .on("end", function() {
                             d3.select(this).attr("visibility", function(d) {
                                 return d.data.toward === toward_option || toward_option === "both" ? "visible" : "hidden";
                             });
                         });
 
                 label_circle.data(pie_outer(data.outer))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("transform", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -723,8 +704,7 @@ function(
                         });
 
                 label_line.data(pie_outer(data.outer))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("x1", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -759,8 +739,7 @@ function(
                         });
 
                 label_text_g.data(pie_outer(data.outer))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("transform", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -778,15 +757,14 @@ function(
                 function end_all(transition, callback) {
                     var n = 0;
                     transition
-                        .each(function() { ++n; })
-                        .each("end", function() {
+                        .on("start", function() { ++n; })
+                        .on("end", function() {
                             if(!--n) callback.apply(this, arguments);
                         });
                 }
 
                 label_text.data(pie_outer(data.outer))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("text-anchor", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -803,28 +781,33 @@ function(
                             label_relax();
                         });
 
-                node_inner_g
-                    .data(
-                        bubble_inner.nodes({ children: data.inner })
-                            .filter(function(d) {
-                                return !d.children;
+                root = d3.hierarchy({"children": data.inner})
+                    .sum(function(d) {
+                        return _(d.data).chain()
+                            .filter(function(v) {
+                                return v.toward === toward_option || toward_option === "both";
                             })
-                    )
-                    .transition()
-                        .duration(transition_duration)
+                            .pluck("spent")
+                            .reduce(function(memo, num) {
+                                return memo + num;
+                            }, 0)
+                            .value();
+                    });
+
+                node_inner_g.data(bubble_inner(root).children)
+                    .transition(t)
                         .attr("transform", function(d) {
                             return "translate(" + [d.x, d.y] + ")"
                         });
 
                 path_inner
                     .data(function(d) {
-                        return pie_inner(d.data).map(function(m) {
+                        return pie_inner(d.data.data).map(function(m) {
                             m.r = d.r;
                             return m;
                         })
                     })
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("d", function(d) {
                             d.innerRadius = d.r - thickness;
                             d.outerRadius = d.r;
@@ -836,8 +819,7 @@ function(
                         });
 
                 link.data(link_data(data))
-                    .transition()
-                        .duration(transition_duration)
+                    .transition(t)
                         .attrTween("d", function(d) {
                             var i = d3.interpolate(this._current, d);
                             this._current = i(0);
@@ -846,22 +828,19 @@ function(
                             };
                         });
 
-                image
-                    .transition()
-                        .duration(transition_duration)
-                        .attr({
-                            "x": function(d) {
-                                return thickness - d.r;
-                            },
-                            "y": function(d) {
-                                return thickness - d.r;
-                            },
-                            "width": function(d) {
-                                return 2 * (d.r - thickness);
-                            },
-                            "height": function(d) {
-                                return 2 * (d.r - thickness);
-                            }
+                image.data(bubble_inner(root).children)
+                    .transition(t)
+                        .attr("x", function(d) {
+                            return thickness - d.r;
+                        })
+                        .attr("y", function(d) {
+                            return thickness - d.r;
+                        })
+                        .attr("width", function(d) {
+                            return 2 * (d.r - thickness);
+                        })
+                        .attr("height", function(d) {
+                            return 2 * (d.r - thickness);
                         });
 
             });

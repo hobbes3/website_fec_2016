@@ -86,9 +86,16 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2>The wonderful data</h2>
+            </div>
+        </div>
+    </section>
+    <svg id="viz_timecharts" class="center full-width"></svg>
+    <section class="container content-section text-center no-padding-top">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
                 <p>Trump has about 3 times the money spent on him than Hillary, but the majority of money was spent opposing him.</p>
                 <p class="small">Hover over various objects to display more information.</p>
-                <svg id="viz_pies" class="center"></svg>
+                <svg id="viz_pies" class="center full-width"></svg>
                 <p>A bigger picture can be created by looking at the top spending committees (Super PACs) supporting and opposing the presidential candidates in the chart below.</p>
                 <p class="small">Select from the buttons below to filter between supporting and opposing causes.</p>
 
@@ -100,9 +107,7 @@
             </div>
         </div>
     </section>
-    <div>
-        <svg id="viz_halo" class="center"></svg>
-    </div>
+    <svg id="viz_halo" class="center"></svg>
 
     <!-- How Section -->
     <section id="how" class="container content-section text-center">
@@ -150,9 +155,7 @@
                 }
             },
             paths: {
-                "d3": "//cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min",
-                "d3-queue": "//d3js.org/queue.v1.min",
-                "d3-path": "//d3js.org/d3-path.v1.min",
+                "d3": "//d3js.org/d3.v4.min",
                 "underscore": "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min",
                 "jquery": "//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min",
                 "jquery_easing": "//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min",
