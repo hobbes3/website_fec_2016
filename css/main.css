@@ -19,10 +19,6 @@
     margin: 0 auto;
 }
 
-.modal-header h4 {
-    color: black;
-}
-
 .btn-red {
     background-color: hsl(0, 100%, 26%) !important;
     background-repeat: repeat-x;

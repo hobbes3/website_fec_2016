@@ -109,7 +109,7 @@ function(
         $("#factor").text(factor);
 
         // Image enlarge
-        $("body").append('<div class="modal fade" id="imagemodal" role="dialog" style="width: 90%; margin: 0 auto;"><div class="modal-admin"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Enlarged image</h4></div><div class="modal-body"><img src="" class="imagepreview" style="width: 100%;"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>');
+        $("body").append('<div class="modal fade" id="imagemodal" role="dialog" style="width: 90%; margin: 0 auto;"><div class="modal-admin"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button></div><div class="modal-body"><img src="" class="imagepreview" style="width: 100%;"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>');
 
         $(".img-pop").on('click', function(e) {
             e.preventDefault();

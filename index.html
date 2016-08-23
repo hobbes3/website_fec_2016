@@ -128,7 +128,7 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2 class="text-center">The technical discussion</h2>
-                <p class="small text-center">by Satoshi Kawasaki</p>
+                <p class="small text-center">by Satoshi Kawasaki - Splunk Ninja (Splunk4Good)</p>
                 <p>I used the <a href="https://beta.fec.gov/data/">OpenFEC site</a> to figure out Clinton and Trump's candidate ID as <code>P00003392</code> and <code>P80001571</code>, respectively.</p>
                 <p>The API endpoint for independent expenditures is called <a href="https://api.open.fec.gov/developers/#!/independent_expenditures">Schedule E</a>. An example endpoint is</p>
                 <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?last_index=0&per_page=100&api_key=DEMO_KEY&candidate_id=P00003392">https://api.open.fec.gov/v1/schedules/schedule_e/?last_index=0&per_page=100&api_key=DEMO_KEY&candidate_id=P00003392</a>.</p>
@@ -192,11 +192,11 @@ FORMAT = nullQueue</pre>
                 <p>With the data available, I wrote a custom visualization called "Halo" in <a href="https://d3js.org/">d3.js</a> v4 that represents two sets of pie charts with a visual relationship between the two sets. The Halo visualization uses the following d3 libraries to compute the pie charts layout:</p>
                 <ul>
                     <li><a href="https://github.com/d3/d3-shape/blob/master/README.md#pie">d3.pie()</a> and <a href="https://github.com/d3/d3-shape/blob/master/README.md#arc">d3.arc()</a> for the pie charts</li>
-                    <li><a href="https://github.com/d3/d3-hierarchy/blob/master/README.md#hierarchy">d3.hierarchy()</a> and <a href="https://github.com/d3/d3-hierarchy/blob/master/README.md#pack">d3.pack()</a> for inner pie chart positioning</li>
+                    <li><a href="https://github.com/d3/d3-hierarchy/blob/master/README.md#hierarchy">d3.hierarchy()</a> and <a href="https://github.com/d3/d3-hierarchy/blob/master/README.md#pack">d3.pack()</a> for inner pie charts position and size</li>
                     <li><a href="https://github.com/d3/d3/blob/master/API.md#paths-d3-path">d3.path()</a> for the ribbons between the outer and inner pie charts</li>
                     <li><a href="https://github.com/d3/d3-transition">d3.transition()</a> for the smooth animation among "both", "supporting", and "opposing" expenditures</li>
                 </ul>
-                <p>In the d3 code, I heavily rely on <a href="http://underscorejs.org/">underscore.js</a> to further parse the JSON to a format that d3 likes. I use <a href="https://jquery.com/">jQuery</a> to do some minor DOM manipulation and <a href="http://getbootstrap.com/">Bootstrap</a> for the front-end design. I modified a Bootstrap theme called <a href="https://startbootstrap.com/template-overviews/grayscale/">Grayscale</a> for this page. Lastly I use <a href="http://requirejs.org/">RequireJS</a> to manage all the JavaScript libraries and to load the JSON files on the web server only once (as opposed to loading the same data for different visualization).</p>
+                <p>In the d3 code, I heavily rely on <a href="http://underscorejs.org/">underscore.js</a> to further parse the JSON to a format that d3 likes. I use <a href="https://jquery.com/">jQuery</a> to do some minor DOM manipulation and <a href="http://getbootstrap.com/">Bootstrap</a> for the front-end design. I modified a Bootstrap theme called <a href="https://startbootstrap.com/template-overviews/grayscale/">Grayscale</a> for this page. Lastly I use <a href="http://requirejs.org/">RequireJS</a> to manage all the JavaScript libraries and to load the JSON files on the web server only once (as opposed to loading the same data for different visualizations).</p>
             </div>
         </div>
     </section>
