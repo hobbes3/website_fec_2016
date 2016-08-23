@@ -85,20 +85,26 @@ function(
                 .on("mouseover", function(d) {
                     if(animation) return;
 
-                    var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
+                    var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
+                        committee_type = d.data["committee.committee_type_full"],
                         toward = d.data.toward,
                         candidate = d.data.candidate,
+                        name = candidate.capitalize(),
                         spent = d.data.spent,
                         total = data.stats.total,
                         total_toward = _(data.stats.toward).findWhere({"toward": toward}).total,
-                        name = candidate.capitalize(),
                         pct = spent / total * 100,
                         pct_toward = spent / total_toward * 100;
 
                     var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
+
+                    if(committee_type !== "none") {
+                        html += "<br>Type: " + committee_type;
+                    }
+
                     html += toward_option === "both" ?
-                        "<br>" + helper.pct_label(pct) + " of total expenditures"
-                        : "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
+                        "<br>" + helper.pct_label(pct) + " of total expenditures" :
+                        "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
 
                     helper.tooltip
                         .style("visibility", "visible")
@@ -212,7 +218,16 @@ function(
                     return (x > 0) ? "start" : "end";
                 })
                 .attr("dominant-baseline", "middle")
-                .attr("class", "label-text")
+                .attr("class", function(d) {
+                    var committee_type = d.data["committee.committee_type_full"];
+                    if(committee_type.indexOf("Super PAC") >= 0 || committee_type === "none") {
+                        return "label-text";
+                    }
+                    else {
+                        return "label-text italic";
+                    }
+
+                })
                 .style("font-size", label_font_size)
                 .text(function (d) {
                     return d.data["committee.name"];
@@ -487,7 +502,8 @@ function(
                 .on("mouseover", function(d) {
                     if(animation) return;
 
-                    var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
+                    var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
+                        committee_type = d.data["committee.committee_type_full"],
                         toward = d.data.toward,
                         candidate = d.data.candidate,
                         name = candidate.capitalize(),
@@ -498,6 +514,10 @@ function(
                         pct_toward = spent / total_toward * 100;
 
                     var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
+
+                    if(committee_type !== "none") {
+                        html += "<br>Type: " + committee_type;
+                    }
 
                     html += toward_option === "both" ?
                         "<br>" + helper.pct_label(pct) + " of total expenditures spent on " + name :
@@ -610,11 +630,23 @@ function(
                 .on("mouseover", function(d) {
                     if(animation) return;
 
-                    var who = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"];
+                    var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
+                        committee_type = d.data["committee.committee_type_full"],
+                        toward = d.data.toward,
+                        candidate = d.data.candidate,
+                        name = candidate.capitalize(),
+                        spent = d.data.spent;
+
+                    var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
+
+                    if(committee_type !== "none") {
+                        html += "<br>Type: " + committee_type;
+                    }
 
                     helper.tooltip
                         .style("visibility", "visible")
-                        .text(who + " spent $" + helper.dollar_format(d.data.spent) + " " + d.data.toward + " " + d.data.candidate.capitalize());
+                        .html(html);
+
                     path_outer_g
                         .transition()
                         .style("opacity", function(dd) {

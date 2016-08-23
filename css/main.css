@@ -14,6 +14,10 @@
     background-color: black;
 }
 
+.italic {
+    font-style: italic;
+}
+
 .center {
     display: block;
     margin: 0 auto;
