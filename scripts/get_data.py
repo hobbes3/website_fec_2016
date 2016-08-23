@@ -25,30 +25,59 @@ kwargs_oneshot = {
 }
 
 stats_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | stats sum(expenditure_amount) as spent by committee_id committee.name support_oppose_indicator candidate | eval spent=round(spent) | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | sort 0 -spent | streamstats count as rank by toward candidate  | eval id=if(rank<=5, 'committee.name', "others ".toward." ".candidate) | stats sum(spent) as spent by id toward candidate | rename id as committee.name
+search index=fec sourcetype=fec_schedule_e committee_id=*
+| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
+| eval spent=round(spent)
+| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+| sort 0 -spent
+| streamstats count as rank by toward candidate
+| eval id=if(rank<=5, 'committee.name', "others ".toward." ".candidate)
+| eval committee.committee_type_full=if(rank<=5, 'committee.committee_type_full', "none")
+| stats sum(spent) as spent by id committee.committee_type_full toward candidate
+| rename id as committee.name
 """
 
+print("Running stats_query...")
+
 stats_result = service.jobs.oneshot(stats_query, **kwargs_oneshot)
+
+print("Done.")
 
 f = open("/data/www/data/schedule_e_stats.json", "w")
 
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | eval spent=round(expenditure_amount) | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | eval id=candidate.":".toward | timechart span=1w sum(spent) by id | fillnull
+search index=fec sourcetype=fec_schedule_e committee_id=*
+| eval spent=round(expenditure_amount)
+| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+| eval id=candidate.":".toward
+| timechart span=1w sum(spent) by id
+| fillnull
 """
 
+print("Running timechart_query...")
+
 timechart_result = service.jobs.oneshot(timechart_query, **kwargs_oneshot)
+
+print("Done.")
 
 f = open("/data/www/data/schedule_e_timechart.json", "w")
 
 print(timechart_result, file=f)
 
 latest_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | head 1 | table _time | eval now=now()
+search index=fec sourcetype=fec_schedule_e committee_id=*
+| head 1
+| table _time
+| eval now=now()
 """
 
+print("Running latest_query...")
+
 latest_result = service.jobs.oneshot(latest_query, **kwargs_oneshot)
+
+print("Done.")
 
 f = open("/data/www/data/schedule_e_latest.json", "w")
 
@@ -58,6 +87,8 @@ attempts = 0
 
 while attempts < 3:
     try:
+        print("Getting polling data...")
+
         response = urllib2.urlopen("http://elections.huffingtonpost.com/pollster/api/charts/2016-general-election-trump-vs-clinton", timeout=5)
         content = response.read()
 
@@ -68,3 +99,5 @@ while attempts < 3:
     except urllib2.URLError as e:
         attempts += 1
         print(type(e))
+
+print("Done.")

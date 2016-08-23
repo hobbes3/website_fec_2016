@@ -19,6 +19,13 @@
     margin: 0 auto;
 }
 
+::selection {
+    background: #ffb7b7; /* WebKit/Blink Browsers */
+}
+::-moz-selection {
+    background: #ffb7b7; /* Gecko Browsers */
+}
+
 .btn-red {
     background-color: hsl(0, 100%, 26%) !important;
     background-repeat: repeat-x;
