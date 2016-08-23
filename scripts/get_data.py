@@ -25,7 +25,7 @@ kwargs_oneshot = {
 }
 
 stats_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | rex field=source "(?<candidate>\w+)_schedule" | stats sum(expenditure_amount) as spent by committee_id committee.name support_oppose_indicator candidate | eval spent=round(spent) | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | sort 0 -spent | streamstats count as rank by toward candidate  | eval id=if(rank<=5, 'committee.name', "others ".toward." ".candidate) | stats sum(spent) as spent by id toward candidate | rename id as committee.name
+search index=fec sourcetype=fec_schedule_e committee_id=* | stats sum(expenditure_amount) as spent by committee_id committee.name support_oppose_indicator candidate | eval spent=round(spent) | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | sort 0 -spent | streamstats count as rank by toward candidate  | eval id=if(rank<=5, 'committee.name', "others ".toward." ".candidate) | stats sum(spent) as spent by id toward candidate | rename id as committee.name
 """
 
 stats_result = service.jobs.oneshot(stats_query, **kwargs_oneshot)
@@ -35,7 +35,7 @@ f = open("/data/www/data/schedule_e_stats.json", "w")
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=* | eval spent=round(expenditure_amount) | rex field=source "(?<candidate>\w+)_schedule" | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | eval id=candidate.":".toward | timechart span=1w sum(spent) by id | fillnull
+search index=fec sourcetype=fec_schedule_e committee_id=* | eval spent=round(expenditure_amount) | eval toward=if(support_oppose_indicator="O", "opposing", "supporting") | eval id=candidate.":".toward | timechart span=1w sum(spent) by id | fillnull
 """
 
 timechart_result = service.jobs.oneshot(timechart_query, **kwargs_oneshot)

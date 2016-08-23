@@ -16,7 +16,8 @@ function(
             width = Math.min($("#viz_pies").parent().innerWidth(), 850),
             height = width * 0.4,
             radius = height / 2 * 0.8,
-            thickness = radius * 0.2;
+            thickness = radius * 0.2,
+            font_size = height * 0.07;
 
         var svg = d3.select("svg#viz_pies")
             .attr("width", width)
@@ -52,7 +53,7 @@ function(
                 .attr("x", 0)
                 .attr("y", radius * 1.25)
                 .attr("text-anchor", "middle")
-                .style("font-size", height * 0.09)
+                .style("font-size", font_size)
                 .text(function(d) {
                     return "$" + helper.dollar_format(d.total) + " spent on " + d.candidate.capitalize();
                 });

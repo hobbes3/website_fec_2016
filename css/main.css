@@ -19,9 +19,8 @@
     margin: 0 auto;
 }
 
-.full-width {
-    margin-left: 0%; !important;
-    width: 100%; !important;
+.modal-header h4 {
+    color: black;
 }
 
 .btn-red {
@@ -81,7 +80,6 @@ section#contact {
 
 text {
     fill: #fff;
-    font-weight: 200;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 

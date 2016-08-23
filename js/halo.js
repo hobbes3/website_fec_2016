@@ -141,12 +141,12 @@ function(
                     this._current = d;
                 });
 
-        var label_outer = outer.selectAll("g.arc_outer")
+        var label_group = outer.selectAll("g.arc_outer")
             .append("g")
-                .attr("class", "label")
+                .attr("class", "label-group")
                 .attr("visibility", "visible");
 
-        var label_circle = label_outer
+        var label_circle = label_group
             .append("circle")
                 .attr("x", 0)
                 .attr("y", 0)
@@ -159,7 +159,7 @@ function(
                     this._current = d;
                 });
 
-        var label_line = label_outer
+        var label_line = label_group
             .append("line")
                 .attr("x1", function (d) {
                     return arc_outer.centroid(d)[0];
@@ -184,7 +184,7 @@ function(
                     this._current = d;
                 });
 
-        var label_text_g = label_outer
+        var label_text_g = label_group
             .append("g")
                 .attr("class", "label-text-group")
                 .attr("transform", function(d) {
@@ -681,7 +681,7 @@ function(
                             };
                         });
 
-                label_outer
+                label_group
                     .attr("visibility", "visible")
                     .transition(t)
                         .style("opacity", function(d) {

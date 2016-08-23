@@ -95,7 +95,10 @@ function(
             .value();
 
         // ex. 2016-08-17T00:00:00.000+00:00
-        var time = json_latest.results[0]._time,
+        var clinton = _(data.stats.candidate).findWhere({"candidate": "clinton"}).total,
+            trump = _(data.stats.candidate).findWhere({"candidate": "trump"}).total,
+            factor = Math.round(trump / clinton)
+            time = json_latest.results[0]._time,
             latest = time.substring(0, time.indexOf("T")),
             updated = json_latest.results[0].now;
 
@@ -103,8 +106,19 @@ function(
         $("#updated").text(moment(updated, "X").fromNow());
 
         $("#total").text("$" + helper.dollar_format(data.stats.total));
+        $("#factor").text(factor);
 
-        timecharts(data);
+        // Image enlarge
+        $("body").append('<div class="modal fade" id="imagemodal" role="dialog" style="width: 90%; margin: 0 auto;"><div class="modal-admin"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Enlarged image</h4></div><div class="modal-body"><img src="" class="imagepreview" style="width: 100%;"></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>');
+
+        $(".img-pop").on('click', function(e) {
+            e.preventDefault();
+            var src = $(this).find("img").data("src") || $(this).find("img").attr("src");
+            $(".imagepreview").attr("src", src);
+            $("#imagemodal").modal("show");
+        });
+
+        //timecharts(data);
         pies(data);
         halo(data);
     }
