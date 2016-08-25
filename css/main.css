@@ -6,6 +6,10 @@
     padding-top: 0px;
 }
 
+.more-padding-bottom {
+    padding-bottom: 600px;
+}
+
 #tooltip {
     font-size: 1.2em;
     position: absolute;
@@ -83,6 +87,11 @@
 
 section#contact {
     margin-bottom: 400px;
+}
+
+.line {
+    fill: none;
+    stroke-width: 1.5px;
 }
 
 text {

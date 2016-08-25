@@ -51,7 +51,7 @@ timechart_query = """
 search index=fec sourcetype=fec_schedule_e committee_id=*
 | eval spent=round(expenditure_amount)
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
-| eval id=candidate.":".toward
+| eval id=candidate."_".toward
 | timechart span=1w sum(spent) by id
 | fillnull
 """

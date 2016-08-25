@@ -27,18 +27,20 @@ function(
         .defer(d3.json, "/data/schedule_e_latest.json")
         .defer(d3.json, "/data/schedule_e_stats.json")
         .defer(d3.json, "/data/schedule_e_timechart.json")
+        .defer(d3.json, "/data/polls.json")
         .await(load_data);
 
     function load_data(
         error,
         json_latest,
         json_stats,
-        json_timechart
+        json_timechart,
+        json_polls
     ) {
         _.mixin({
             "total": function(data, key) {
                 return _(data).chain()
-                    .pluck("spent")
+                    .pluck(key)
                     .reduce(function(memo, num) {
                         return memo + parseInt(num);
                     }, 0)
@@ -74,7 +76,8 @@ function(
                             "toward": by_toward(v, k)
                         };
                     })
-                    .value()
+                    .value(),
+            "timechart": []
         };
 
         data.outer = _(json_stats.results).map(function(v, i) {
@@ -93,6 +96,55 @@ function(
                 };
             })
             .value();
+
+        data.timechart = [];
+
+        _(json_timechart.results).each(function(v) {
+            // ex. 2016-08-17T00:00:00.000+00:00
+            var time = v._time.substring(0, v._time.indexOf("T"));
+
+            _(v).chain()
+                .pick(function(vv, kk) {
+                    return kk.charAt(0) !== "_";
+                })
+                .map(function(vv, kk) {
+                    var matches = /^([^_]+)_(.+)$/.exec(kk);
+
+                    var obj = {
+                        "candidate": matches[1]
+                    };
+
+                    obj[matches[2]] = parseInt(vv);
+
+                    return obj;
+                })
+                .groupBy("candidate")
+                .each(function(vv, kk) {
+                    var obj = _(vv).reduce(function(memo, value) {
+                        return _(memo).extend(value);
+                    }, {});
+
+                    obj.date = new Date(time);
+
+                    var poll = _(json_polls.estimates_by_date).findWhere({"date": time});
+
+                    if(poll) {
+                        obj.poll = _(poll.estimates).findWhere({"choice": kk.capitalize()}).value;
+                    }
+
+                    var candidate = _(data.timechart).findWhere({"candidate": kk});
+
+                    if(candidate) {
+                        candidate.data.push(obj);
+                    }
+                    else {
+                        data.timechart.push({
+                            "candidate": kk,
+                            "data": [obj]
+                        });
+                    }
+                });
+        });
 
         // ex. 2016-08-17T00:00:00.000+00:00
         var clinton = _(data.stats.candidate).findWhere({"candidate": "clinton"}).total,
@@ -118,7 +170,7 @@ function(
             $("#imagemodal").modal("show");
         });
 
-        //timecharts(data);
+        timecharts(data);
         pies(data);
         halo(data);
     }
