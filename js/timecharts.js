@@ -2,12 +2,14 @@ define([
     "jquery",
     "d3",
     "underscore",
+    "moment",
     "js/helper"
 ],
 function(
     $,
     d3,
     _,
+    moment,
     helper
 ) {
     return function(data) {
@@ -177,32 +179,69 @@ function(
         function mouseover() {
             d3.selectAll(".hover")
                 .attr("visibility", "visible");
+
+            chart_g.selectAll("path")
+                .transition()
+                .style("opacity", 0.4);
         }
 
         function mouseout() {
             d3.selectAll(".hover")
                 .attr("visibility", "hidden");
+
+            chart_g.selectAll("path")
+                .transition()
+                .style("opacity", 1.0);
+        }
+
+        function get_color(d) {
+            switch(d) {
+                case "supporting": return green;
+                case "opposing": return red;
+                case "poll": return "steelblue";
+            }
         }
 
         function mousemove() {
             var x0 = x.invert(d3.mouse(this)[0]),
-                i = bisect_date(dates, x0, 1),
-                d0 = dates[i - 1],
-                d1 = dates[i],
-                date = x0 - d0 > d1 - x0 ? d1 : d0;
+                n = bisect_date(dates, x0, 1),
+                d0 = dates[n - 1],
+                d1 = dates[n],
+                date = x0 - d0 > d1 - x0 ? d1 : d0,
+                index = _(dates).findIndex(function(v) {
+                    return +v === +date;
+                });
 
-            hover_line
-                .attr("transform", "translate(" + [x(date), 0] + ")");
+            hover.attr("transform", "translate(" + [x(date), 0] + ")");
+            hover_date.text(moment(date).format("MMMM Do YYYY"));
+            hover_poll.text(function() {
+                var clinton = Math.round(get_data(date, "clinton").poll),
+                    trump = Math.round(get_data(date, "trump").poll),
+                    label = "Poll spread: ";
+
+                if(clinton > trump) {
+                    label += "Clinton +" + (clinton - trump);
+                }
+                else if(trump > clinton) {
+                    label += "Trump +" + (trump - clinton);
+                }
+                else {
+                    label += "Tie!"
+                }
+
+                return label;
+            });
 
             hover_circle
                 .attr("visibility", function(d) {
-                    var candidate = d3.select(this.parentNode).attr("class"),
+                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
                         value = get_data(date, candidate)[d];
 
                     return value === null ? "hidden" : "visible";
                 })
+                .attr("stroke", get_color)
                 .attr("transform", function(d) {
-                    var candidate = d3.select(this.parentNode).attr("class"),
+                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
                         value = get_data(date, candidate)[d],
                         p_min = helper.round_nearest(data.stats.timechart.min_poll[candidate], 5, "down");
 
@@ -215,33 +254,118 @@ function(
                         return "translate(" + [x(date), y_spent(value)] + ")";
                     }
                 });
+
+            hover_text
+                .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                .attr("y", function(d, i) {
+                    return (i + 1) * height / 2 * 0.2;
+                })
+                .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                .attr("transform", "translate(" + [x(date), 0] + ")")
+                .style("fill", get_color)
+                .text(function(d) {
+                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                        value = get_data(date, candidate)[d],
+                        dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1)
+                        sum = _(dd).reduce(function(memo, v) {
+                            return memo + v[d];
+                        }, 0);
+
+                    if(d === "poll") {
+                        return value === null ? "No poll data" : "Poll " + value + "%";
+                    }
+                    else {
+                        return "$" + helper.dollar_format(value) + " - Total $" + helper.dollar_format(sum) + " spent " + d + " " + candidate.capitalize();
+                    }
+                });
+
+            hover_total
+                .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                .attr("y", (hover_text._groups[0].length + 1) * height / 2 * 0.2)
+                .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                .attr("transform", "translate(" + [x(date), 0] + ")")
+                .text(function() {
+                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                        dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1),
+                        sum = _(dd).reduce(function(memo, v) {
+                            return memo + v.supporting + v.opposing;
+                        }, 0);
+
+                        return "Total $" + helper.dollar_format(sum) + " spent toward " + candidate.capitalize();
+                });
         }
 
-        var hover_circle = chart_g.selectAll("circle.hover")
+        var hover = svg
+            .append("g")
+                .attr("class", "hover");
+
+        var hover_g = chart_g
+            .append("g")
+                .attr("class", function(d) {
+                    return d.candidate + " hover";
+                });
+
+        var hover_data = hover_g.selectAll()
             .data(function(d) {
                 return _(d.data[0]).chain()
                     .keys()
                     .reject(function(v) {
                         return v === "candidate" || v === "date";
                     })
+                    .reverse()
                     .value();
             })
-            .enter()
+            .enter();
+
+        var hover_circle = hover_data
                 .append("circle")
                     .attr("class", "hover")
-                    .attr("r", 4)
+                    .attr("visibility", "hidden")
+                    .attr("r", 6)
                     .attr("x", 0)
                     .attr("y", 0)
-                    .attr("visibility", "hidden")
-                    .style("fill", "none")
-                    .style("stroke", "white");
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none");
 
-        var hover_line = svg
+        var hover_text = hover_data
+            .append("text")
+                .attr("class", "hover")
+                .attr("visibility", "hidden")
+                .style("font-size", font_size);
+
+        var hover_total = hover_g
+            .append("text")
+                .attr("class", "hover")
+                .attr("visibility", "hidden")
+                .style("font-size", font_size)
+                .style("fill", "white");
+
+        var hover_line = hover
             .append("path")
                 .attr("class", "hover")
+                .attr("visibility", "hidden")
                 .attr("d", "M0 0 l0 " + height)
-                .attr("stroke", "white")
-                .attr("visibility", "hidden");
+                .attr("stroke", "white");
+
+        var hover_date = hover
+            .append("text")
+                .attr("class", "hover")
+                .attr("visibility", "hidden")
+                .attr("x", 0)
+                .attr("y", -25)
+                .attr("text-anchor", "middle")
+                .style("font-size", font_size)
+                .style("fill", "white");
+
+        var hover_poll = hover
+            .append("text")
+                .attr("class", "hover")
+                .attr("visibility", "hidden")
+                .attr("x", 0)
+                .attr("y", -5)
+                .attr("text-anchor", "middle")
+                .style("font-size", font_size)
+                .style("fill", "white");
 
         var hover_rect = svg
             .append("rect")
