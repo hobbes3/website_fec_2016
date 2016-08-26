@@ -94,8 +94,11 @@ section#contact {
     stroke-width: 1.5px;
 }
 
+.tick line{
+    stroke: #fff;
+}
+
 text {
-    fill: #fff;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
@@ -111,7 +114,7 @@ text {
     fill: #fff;
 }
 
-path {
+#viz_halo path,#viz_pies path {
     stroke: #363636;
     stroke-width: 1px;
 }

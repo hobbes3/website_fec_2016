@@ -77,7 +77,11 @@ function(
                         };
                     })
                     .value(),
-            "timechart": []
+            "timechart": {
+                "max_spent": 0,
+                "min_poll": {},
+                "max_poll_range": 0
+            }
         };
 
         data.outer = _(json_stats.results).map(function(v, i) {
@@ -128,9 +132,7 @@ function(
 
                     var poll = _(json_polls.estimates_by_date).findWhere({"date": time});
 
-                    if(poll) {
-                        obj.poll = _(poll.estimates).findWhere({"choice": kk.capitalize()}).value;
-                    }
+                    obj.poll = poll ? _(poll.estimates).findWhere({"choice": kk.capitalize()}).value : null;
 
                     var candidate = _(data.timechart).findWhere({"candidate": kk});
 
@@ -144,6 +146,18 @@ function(
                         });
                     }
                 });
+        });
+
+        _(data.timechart).each(function(v) {
+            var max_supporting = _(v.data).chain().pluck("supporting").max().value(),
+                max_opposing = _(v.data).chain().pluck("opposing").max().value(),
+                p_max = _(v.data).chain().pluck("poll").compact().max().value(),
+                p_min = _(v.data).chain().pluck("poll").compact().min().value();
+
+            data.stats.timechart.min_poll[v.candidate] = p_min;
+
+            data.stats.timechart.max_spent = Math.max(data.stats.timechart.max_spent, max_supporting, max_opposing);
+            data.stats.timechart.max_poll_range = Math.max(data.stats.timechart.max_poll_range, p_max - p_min);
         });
 
         // ex. 2016-08-17T00:00:00.000+00:00

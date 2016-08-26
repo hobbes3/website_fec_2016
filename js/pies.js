@@ -11,17 +11,25 @@ function(
     helper
 ) {
     return function(data) {
-        var green = data.green,
+        var margin = {
+                "top": 10,
+                "right": 20,
+                "bottom": 10,
+                "left": 20
+            },
+            green = data.green,
             red = data.red,
-            width = Math.min($("#viz_pies").parent().innerWidth(), 850),
-            height = width * 0.4,
+            width = Math.min($("#viz_pies").parent().innerWidth(), 850) - margin.left - margin.right,
+            height = width * 0.4 - margin.top - margin.bottom,
             radius = height / 2 * 0.8,
             thickness = radius * 0.2,
             font_size = height * 0.07;
 
         var svg = d3.select("svg#viz_pies")
-            .attr("width", width)
-            .attr("height", height);
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr("transform", "translate(" + [margin.left, margin.top] + ")");
 
         var pie = d3.pie()
             .value(function(d) {
@@ -53,6 +61,7 @@ function(
                 .attr("x", 0)
                 .attr("y", radius * 1.25)
                 .attr("text-anchor", "middle")
+                .style("fill", "white")
                 .style("font-size", font_size)
                 .text(function(d) {
                     return "$" + helper.dollar_format(d.total) + " spent on " + d.candidate.capitalize();

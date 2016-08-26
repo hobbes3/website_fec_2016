@@ -84,6 +84,8 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2 class="text-center">The wonderful data</h2>
+                <p>Overall, independent expenditures in 2016 have indicated an overwhelmingly negative race, and Super-PAC spending has comprised a significant amount of that spending. However, that is not necessarily the case for both candidates.</p>
+                <p class="small text-center">Hover over each chart for more details.</p>
             </div>
         </div>
     </section>
@@ -91,8 +93,7 @@
     <section class="container content-section text-justify no-padding-top">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
-                <p>Overall, independent expenditures in 2016 have indicated an overwhelmingly negative race, and Super-PAC spending has comprised a significant amount of that spending. However, that is not necessarily the case for both candidates. More than <span id="factor"></span> times the amount of spending has been directed toward Trump than toward Clinton, but the majority of that spending was spent in opposition. Independent spending on Clinton in the election to date has been roughly even for and against.</p>
-                <p class="small text-center">Hover over each chart for more details.</p>
+                <p>More than <span id="factor"></span> times the amount of spending has been directed toward Trump than toward Clinton, but the majority of that spending was spent in opposition. Independent spending on Clinton in the election to date has been roughly even for and against.</p>
             </div>
         </div>
     </section>
@@ -182,14 +183,14 @@ FORMAT = nullQueue</pre>
 | timechart span=1w sum(spent) by id
 | fillnull
 </pre>
-                <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a> (currently not used)</p>
+                <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a></p>
 <pre>index=fec sourcetype=fec_schedule_e committee_id=*
 | head 1
 | table _time
 | eval now=now()</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_latest.json">schedule_e_latest.json</a></p>
                 <p>Because we can't control the JSON response format of the OpenFEC API response, we added <code>committee_id=*</code> to potentially filter out any invalid JSON events in Splunk. In the past when the response format changed, we would get a few "stray" events that the regular expression in <code>props.conf</code> didn't catch.</p>
-                <p>The Python script also calls the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post API</a> for the 2016 Presidential Election poll results which is saved as <a href="/data/polls.json">polls.json</a> (also currently not used). The original idea was to correlate poll results with Schedule E spending over time. That functionality may be available in subsequent versions.</p>
+                <p>The Python script also calls the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post API</a> for the 2016 Presidential Election poll results which is saved as <a href="/data/polls.json">polls.json</a>. The idea is to correlate poll results with Schedule E spending over time as shown in the first chart.</p>
                 <p>With the data available, we developed a custom visualization called "Halo" in <a href="https://d3js.org/">d3.js</a> v4 that represents two sets of pie charts with a visual relationship between the two sets. The Halo visualization uses the following d3 libraries to compute the pie charts layout:</p>
                 <ul>
                     <li><a href="https://github.com/d3/d3-shape/blob/master/README.md#pie">d3.pie()</a> and <a href="https://github.com/d3/d3-shape/blob/master/README.md#arc">d3.arc()</a> for the pie charts</li>

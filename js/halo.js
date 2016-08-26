@@ -228,6 +228,7 @@ function(
                     }
 
                 })
+                .style("fill", "white")
                 .style("font-size", label_font_size)
                 .text(function (d) {
                     return d.data["committee.name"];

@@ -28,5 +28,17 @@ function(
         return pct < 1 ? "<1%" : Math.round(pct) + "%";
     }
 
+    helper.round_nearest = function(num, scale, direction) {
+        if(direction === "up") {
+            return Math.ceil(num / scale) * scale;
+        }
+        else if(direction === "down") {
+            return Math.floor(num / scale) * scale;
+        }
+        else {
+            return undefined;
+        }
+    }
+
     return helper;
 });
