@@ -40,5 +40,11 @@ function(
         }
     }
 
+    helper.get_translate = function(translate) {
+        var match = /^translate\(([^,]+),(.+)\)/.exec(translate);
+        return [parseFloat(match[1]), parseFloat(match[2])];
+    }
+
+
     return helper;
 });

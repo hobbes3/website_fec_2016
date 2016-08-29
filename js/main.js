@@ -42,7 +42,7 @@ function(
                 return _(data).chain()
                     .pluck(key)
                     .reduce(function(memo, num) {
-                        return memo + parseInt(num);
+                        return memo + parseFloat(num);
                     }, 0)
                     .value();
             }
@@ -85,7 +85,7 @@ function(
         };
 
         data.outer = _(json_stats.results).map(function(v, i) {
-            v.spent = parseInt(v.spent);
+            v.spent = parseFloat(v.spent);
             v._index = i;
 
             return v;
@@ -105,7 +105,7 @@ function(
 
         _(json_timechart.results).each(function(v) {
             // ex. 2016-08-17T00:00:00.000+00:00
-            var time = v._time.substring(0, v._time.indexOf("T"));
+            var date = v._time.substring(0, v._time.indexOf("T"));
 
             _(v).chain()
                 .pick(function(vv, kk) {
@@ -118,7 +118,7 @@ function(
                         "candidate": matches[1]
                     };
 
-                    obj[matches[2]] = parseInt(vv);
+                    obj[matches[2]] = parseFloat(vv);
 
                     return obj;
                 })
@@ -128,9 +128,9 @@ function(
                         return _(memo).extend(value);
                     }, {});
 
-                    obj.date = new Date(time);
+                    obj.date = moment.utc(date);
 
-                    var poll = _(json_polls.estimates_by_date).findWhere({"date": time});
+                    var poll = _(json_polls.estimates_by_date).findWhere({"date": date});
 
                     obj.poll = poll ? _(poll.estimates).findWhere({"choice": kk.capitalize()}).value : null;
 

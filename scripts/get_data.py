@@ -27,7 +27,6 @@ kwargs_oneshot = {
 stats_query = """
 search index=fec sourcetype=fec_schedule_e committee_id=*
 | stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
-| eval spent=round(spent)
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | sort 0 -spent
 | streamstats count as rank by toward candidate
@@ -49,10 +48,9 @@ print(stats_result, file=f)
 
 timechart_query = """
 search index=fec sourcetype=fec_schedule_e committee_id=*
-| eval spent=round(expenditure_amount)
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | eval id=candidate."_".toward
-| timechart span=1w sum(spent) by id
+| timechart span=1w sum(expenditure_amount) by id
 | fillnull
 """
 

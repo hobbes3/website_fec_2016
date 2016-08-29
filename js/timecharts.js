@@ -14,7 +14,7 @@ function(
 ) {
     return function(data) {
         var margin = {
-                "top": 50,
+                "top": 100,
                 "right": 50,
                 "bottom": 100,
                 "left": 50
@@ -25,11 +25,52 @@ function(
             height = width * 0.5 - margin.top - margin.bottom,
             font_size = height * 0.04,
             img_ratio = 190 / 616,
-            img_width = height / 2 * img_ratio
+            img_width = height / 2 * img_ratio,
             dates = _(data.timechart[0].data).pluck("date"),
-            election_date = new Date("2016-11-08"),
+            earliest = moment.utc("2015-05-01"),
+            latest = moment.utc("2016-12-01"),
+            election_date = moment.utc("2016-11-08"),
             max_spent = helper.round_nearest(data.stats.timechart.max_spent, 1000000, "up"),
-            max_poll_range = helper.round_nearest(data.stats.timechart.max_poll_range, 5, "up");
+            max_poll_range = helper.round_nearest(data.stats.timechart.max_poll_range, 5, "up"),
+            marker_width = 20,
+            marker_height = 15,
+            marker_relax_delta = marker_height * 1.2,
+            marker_relax_sleep = 10;
+
+        var timeline_data = [
+            {"date": "2015-06-16", "name": "Donald Trump declares for the Republican presidential nomination", "link": null},
+            {"date": "2015-08-06", "name": "First Republican debate", "link": null},
+            {"date": "2015-09-16", "name": "Second Republican debate", "link": null},
+            {"date": "2015-10-13", "name": "First Democratic debate", "link": null},
+            {"date": "2015-10-28", "name": "Third Republican debate", "link": null},
+            {"date": "2015-11-10", "name": "Fourth Republican debate", "link": null},
+            {"date": "2015-11-14", "name": "Second Democratic debate", "link": null},
+            {"date": "2015-12-15", "name": "Fifth Republican debate", "link": null},
+            {"date": "2015-12-19", "name": "Third Democratic debate", "link": null},
+            {"date": "2016-01-14", "name": "Sixth Republican debate", "link": null},
+            {"date": "2016-01-17", "name": "Fourth Democratic debate", "link": null},
+            {"date": "2016-01-28", "name": "Seventh Republican debate", "link": null},
+            {"date": "2016-02-04", "name": "Fifth Democratic debate", "link": null},
+            {"date": "2016-02-06", "name": "Eighth Republican debate", "link": null},
+            {"date": "2016-02-11", "name": "Sixth Democratic debate", "link": null},
+            {"date": "2016-02-13", "name": "Ninth Republican debate", "link": null},
+            {"date": "2016-02-25", "name": "Tenth Republican debate", "link": null},
+            {"date": "2016-03-01", "name": "Super Tuesday", "link": "https://en.wikipedia.org/wiki/Super_Tuesday"},
+            {"date": "2016-03-03", "name": "Eleventh Republican debate", "link": null},
+            {"date": "2016-03-06", "name": "Seventh Democratic debate", "link": null},
+            {"date": "2016-03-09", "name": "Eighth Democratic debate", "link": null},
+            {"date": "2016-03-10", "name": "Twelfth and final Republican debate", "link": null},
+            {"date": "2016-04-14", "name": "Ninth and final Democratic debate", "link": null},
+            {"date": "2016-05-03", "name": "Ted Cruz withdraws from Republican presidential nomination", "link": null},
+            {"date": "2016-07-12", "name": "Bernie Sanders endorses Hillary Clinton", "link": null},
+            {"date": "2016-07-18", "name": "Republican National Convention", "link": "https://en.wikipedia.org/wiki/2016_Republican_National_Convention"},
+            {"date": "2016-07-23", "name": "Democratic National Committee email leak", "link": "https://en.wikipedia.org/wiki/2016_Democratic_National_Committee_email_leak"},
+            {"date": "2016-07-25", "name": "Democratic National Convention", "link": "https://en.wikipedia.org/wiki/2016_Democratic_National_Convention"},
+            {"date": "2016-09-26", "name": "First presidential general election debate", "link": null},
+            {"date": "2016-10-04", "name": "Only vice presidential general election debate", "link": null},
+            {"date": "2016-10-09", "name": "Second presidential general election debate", "link": null},
+            {"date": "2016-10-19", "name": "Third and final presidential general election debate", "link": null}
+        ];
 
         var svg = d3.select("svg#viz_timecharts")
                 .attr("width", width + margin.left + margin.right)
@@ -51,6 +92,11 @@ function(
                     return "translate(" + [x, y] + ")";
                 });
 
+        var x_line = chart_g
+            .append("path")
+                .attr("d", "M0 " + height / 2 + " l" + (width - img_width) + " 0")
+                .style("stroke", "white");
+
         var image = chart_g
             .append("image")
                 .attr("x", -img_width)
@@ -71,7 +117,7 @@ function(
                 });
 
         var x = d3.scaleTime()
-            .domain([new Date("2015-05-01"), new Date("2016-12-01")])
+            .domain([earliest, latest])
             .range([0, width - img_width]);
 
         var y_spent = d3.scaleLinear()
@@ -80,6 +126,11 @@ function(
 
         var y_poll = d3.scaleLinear()
             .range([0, height / 2]);
+
+        var line = d3.line()
+            .x(function(d) {
+                return x(d.date);
+            });
 
         var x_axis = svg
             .append("g")
@@ -90,18 +141,6 @@ function(
                         .ticks(d3.timeMonth.every(1))
                 );
 
-        var line = d3.line()
-            .x(function(d) {
-                return x(d.date);
-            });
-
-        // Election Day
-        x_axis
-            .append("path")
-                .attr("d", "M" + x(election_date) + " 0 l0 -" + height)
-                .attr("stroke", "orange")
-                .attr("stroke-width", 2);
-
         x_axis.selectAll("text")
             .attr("font-size", font_size)
             .attr("y", 0)
@@ -110,11 +149,21 @@ function(
             .style("fill", "white")
             .style("text-anchor", "start");
 
-        x_axis
+        // Election Day
+        svg
+            .append("path")
+                .attr("class", "election_day")
+                .attr("d", "M" + x(election_date) + " 0 l0 " + height)
+                .attr("stroke", "orange")
+                .attr("stroke-width", 2);
+
+        svg
             .append("text")
-                .attr("x", x(election_date))
-                .attr("y", -height - 10)
+                .attr("class", "election_day")
                 .attr("text-anchor", "middle")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("transform", "translate(" + [x(election_date) * 1.005, height / 2] + ")rotate(90)")
                 .style("font-size", font_size)
                 .style("fill", "orange")
                 .text("Election Day, Nov. 8th")
@@ -163,6 +212,125 @@ function(
                 })
                 .style("stroke", "steelblue");
 
+        var timeline = svg
+            .append("g")
+                .attr("class", "timeline");
+
+        timeline
+            .append("path")
+                .attr("d", "M0 0 l" + (width - img_width) + " 0")
+                .style("stroke", "white");
+
+        var timeline_hover_line = timeline
+            .append("path")
+                .attr("d", "M0 0 l0 " + height)
+                .style("stroke", "white")
+                .style("visibility", "hidden");
+
+        var timeline_event = timeline.selectAll("g.marker")
+            .data(timeline_data)
+            .enter()
+            .append("g")
+                .attr("class", "marker")
+                .attr("transform", function(d) {
+                    return "translate(" + [x(moment.utc(d.date)), -3] + ")";
+                });
+
+        var timeline_marker_d = function() {
+            var w = marker_width,
+                h = marker_height,
+                path = d3.path();
+
+            path.moveTo(0, 0);
+            path.lineTo(w / 2, -h);
+            path.lineTo(w / 2, -h);
+            path.lineTo(-w / 2, -h);
+            path.lineTo(-w / 2, -h);
+            path.closePath();
+
+            return path.toString();
+        }
+
+        var timeline_marker = timeline_event
+            .append("path")
+                .attr("class", "marker")
+                .attr("d", timeline_marker_d)
+                .attr("transform", "translate(0,0)")
+                .style("fill", function(d) {
+                    return d.name.indexOf("debate") > -1 ? "yellow" : "white";
+                })
+                .style("opacity", 0.8)
+                .on("mouseover", function(d) {
+                    timeline_marker
+                        .filter(function(dd) {
+                            return dd !== d;
+                        })
+                        .transition()
+                        .style("opacity", 0.0)
+                        .delay(0)
+                        .style("visibility", "hidden");
+
+                    timeline_hover_line
+                        .transition()
+                        .attr("transform", "translate(" + [x(moment.utc(d.date)), 0] + ")")
+                        .style("opacity", 0.8)
+                        .style("visibility", "visible")
+
+                    helper.tooltip
+                        .style("visibility", "visible")
+                        .html(moment.utc(d.date).format("MMMM Do YYYY") + "<br>" + d.name);
+                })
+                .on("mouseout", function(d) {
+                    helper.tooltip.style("visibility", "hidden");
+
+                    timeline.selectAll("path")
+                        .transition()
+                        .style("opacity", 0.8)
+                        .delay(0)
+                        .style("visibility", "visible");
+                })
+                .on("mousemove", helper.tooltip_position);
+
+        function marker_relax() {
+            var adjusted = false;
+
+            timeline_marker
+                .each(function() {
+                    var a = this;
+
+                    timeline_marker
+                        .each(function() {
+                            var b = this;
+                                da = d3.select(a),
+                                db = d3.select(b);
+
+                            if(a === b) return;
+
+                            var ra = a.getBoundingClientRect(),
+                                rb = b.getBoundingClientRect();
+
+                            var overlap = ra.top < rb.bottom &&
+                                          rb.top < ra.bottom &&
+                                          ra.left < rb.right &&
+                                          rb.left < ra.right;
+
+                            if(!overlap) return;
+
+                            adjusted = true;
+
+                            var yb = helper.get_translate(db.attr("transform"))[1];
+
+                            db.attr("transform", "translate(" + [0, yb - marker_relax_delta] + ")");
+                        });
+                });
+
+            if(adjusted) {
+                setTimeout(marker_relax, marker_relax_sleep)
+            }
+        }
+
+        marker_relax();
+
         var bisect_date = d3.bisector(function(d) {
             return d;
         }).left;
@@ -176,23 +344,6 @@ function(
                 });
         }
 
-        function mouseover() {
-            d3.selectAll(".hover")
-                .attr("visibility", "visible");
-
-            chart_g.selectAll("path")
-                .transition()
-                .style("opacity", 0.4);
-        }
-
-        function mouseout() {
-            d3.selectAll(".hover")
-                .attr("visibility", "hidden");
-
-            chart_g.selectAll("path")
-                .transition()
-                .style("opacity", 1.0);
-        }
 
         function get_color(d) {
             switch(d) {
@@ -200,99 +351,6 @@ function(
                 case "opposing": return red;
                 case "poll": return "steelblue";
             }
-        }
-
-        function mousemove() {
-            var x0 = x.invert(d3.mouse(this)[0]),
-                n = bisect_date(dates, x0, 1),
-                d0 = dates[n - 1],
-                d1 = dates[n],
-                date = x0 - d0 > d1 - x0 ? d1 : d0,
-                index = _(dates).findIndex(function(v) {
-                    return +v === +date;
-                });
-
-            hover.attr("transform", "translate(" + [x(date), 0] + ")");
-            hover_date.text(moment(date).format("MMMM Do YYYY"));
-            hover_poll.text(function() {
-                var clinton = Math.round(get_data(date, "clinton").poll),
-                    trump = Math.round(get_data(date, "trump").poll),
-                    label = "Poll spread: ";
-
-                if(clinton > trump) {
-                    label += "Clinton +" + (clinton - trump);
-                }
-                else if(trump > clinton) {
-                    label += "Trump +" + (trump - clinton);
-                }
-                else {
-                    label += "Tie!"
-                }
-
-                return label;
-            });
-
-            hover_circle
-                .attr("visibility", function(d) {
-                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
-                        value = get_data(date, candidate)[d];
-
-                    return value === null ? "hidden" : "visible";
-                })
-                .attr("stroke", get_color)
-                .attr("transform", function(d) {
-                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
-                        value = get_data(date, candidate)[d],
-                        p_min = helper.round_nearest(data.stats.timechart.min_poll[candidate], 5, "down");
-
-                    y_poll.domain([p_min + max_poll_range, p_min]);
-
-                    if(d === "poll") {
-                        return "translate(" + [x(date), y_poll(value)] + ")";
-                    }
-                    else {
-                        return "translate(" + [x(date), y_spent(value)] + ")";
-                    }
-                });
-
-            hover_text
-                .attr("x", index < dates.length * 0.5 ? 20 : -20)
-                .attr("y", function(d, i) {
-                    return (i + 1) * height / 2 * 0.2;
-                })
-                .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
-                .attr("transform", "translate(" + [x(date), 0] + ")")
-                .style("fill", get_color)
-                .text(function(d) {
-                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
-                        value = get_data(date, candidate)[d],
-                        dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1)
-                        sum = _(dd).reduce(function(memo, v) {
-                            return memo + v[d];
-                        }, 0);
-
-                    if(d === "poll") {
-                        return value === null ? "No poll data" : "Poll " + value + "%";
-                    }
-                    else {
-                        return "$" + helper.dollar_format(value) + " - Total $" + helper.dollar_format(sum) + " spent " + d + " " + candidate.capitalize();
-                    }
-                });
-
-            hover_total
-                .attr("x", index < dates.length * 0.5 ? 20 : -20)
-                .attr("y", (hover_text._groups[0].length + 1) * height / 2 * 0.2)
-                .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
-                .attr("transform", "translate(" + [x(date), 0] + ")")
-                .text(function() {
-                    var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
-                        dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1),
-                        sum = _(dd).reduce(function(memo, v) {
-                            return memo + v.supporting + v.opposing;
-                        }, 0);
-
-                        return "Total $" + helper.dollar_format(sum) + " spent toward " + candidate.capitalize();
-                });
         }
 
         var hover = svg
@@ -369,12 +427,141 @@ function(
 
         var hover_rect = svg
             .append("rect")
-                .attr("width", width)
+                .attr("width", width - img_width)
                 .attr("height", height)
                 .style("fill", "none")
                 .style("pointer-events", "all")
-                .on("mouseover", mouseover)
-                .on("mouseout", mouseout)
-                .on("mousemove", mousemove);
+                .on("mouseover", function() {
+                    d3.selectAll(".hover")
+                        .attr("visibility", "visible");
+
+                    chart_g.selectAll("path")
+                        .transition()
+                        .style("opacity", 0.4);
+
+                    x_axis.selectAll(".election_day")
+                        .transition()
+                        .style("opacity", 0.4);
+
+                    timeline_event
+                        .transition()
+                        .style("opacity", 0.0);
+                })
+                .on("mouseout", function() {
+                    d3.selectAll(".hover")
+                        .attr("visibility", "hidden");
+
+                    chart_g.selectAll("path")
+                        .transition()
+                        .style("opacity", 1.0);
+
+                    x_axis.selectAll(".election_day")
+                        .transition()
+                        .style("opacity", 1.0);
+
+                    timeline_event
+                        .transition()
+                        .style("opacity", 0.8);
+                })
+                .on("mousemove", function() {
+                    var x0 = x.invert(d3.mouse(this)[0]),
+                        n = bisect_date(dates, x0, 1),
+                        d0 = dates[n - 1],
+                        d1 = dates[n],
+                        date = x0 - d0 > d1 - x0 ? d1 : d0,
+                        index = _(dates).findIndex(function(v) {
+                            return +v === +date;
+                        });
+
+                    hover.attr("transform", "translate(" + [x(date), 0] + ")");
+
+                    var hover_date_text = moment.utc(date).format("MMMM Do") + " - " + moment.utc(date).add(6, "days").format("MMMM Do YYYY");
+
+                    hover_date.text(hover_date_text);
+                    hover_poll.text(function() {
+                        var c = get_data(date, "clinton").poll,
+                            t = get_data(date, "trump").poll,
+                            clinton = Math.round(c),
+                            trump = Math.round(t),
+                            label = "Poll spread: ";
+
+                        if(clinton > trump) {
+                            label += "Clinton +" + (clinton - trump);
+                        }
+                        else if(trump > clinton) {
+                            label += "Trump +" + (trump - clinton);
+                        }
+                        else if(trump === clinton && c !== null && t !== null) {
+                            label += "Tie!";
+                        }
+                        else {
+                            label += "N/A";
+                        }
+
+                        return label;
+                    });
+
+                    hover_circle
+                        .attr("visibility", function(d) {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                value = get_data(date, candidate)[d];
+
+                            return value === null ? "hidden" : "visible";
+                        })
+                        .attr("stroke", get_color)
+                        .attr("transform", function(d) {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                value = get_data(date, candidate)[d],
+                                p_min = helper.round_nearest(data.stats.timechart.min_poll[candidate], 5, "down");
+
+                            y_poll.domain([p_min + max_poll_range, p_min]);
+
+                            if(d === "poll") {
+                                return "translate(" + [x(date), y_poll(value)] + ")";
+                            }
+                            else {
+                                return "translate(" + [x(date), y_spent(value)] + ")";
+                            }
+                        });
+
+                    hover_text
+                        .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                        .attr("y", function(d, i) {
+                            return (i + 1) * height / 2 * 0.2;
+                        })
+                        .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                        .attr("transform", "translate(" + [x(date), 0] + ")")
+                        .style("fill", get_color)
+                        .text(function(d) {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                value = get_data(date, candidate)[d],
+                                dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1)
+                                sum = _(dd).reduce(function(memo, v) {
+                                    return memo + v[d];
+                                }, 0);
+
+                            if(d === "poll") {
+                                return value === null ? "No poll data" : "Poll " + value + "%";
+                            }
+                            else {
+                                return "$" + helper.dollar_format(value) + " - Total $" + helper.dollar_format(sum) + " spent " + d + " " + candidate.capitalize();
+                            }
+                        });
+
+                    hover_total
+                        .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                        .attr("y", (hover_text._groups[0].length + 1) * height / 2 * 0.2)
+                        .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                        .attr("transform", "translate(" + [x(date), 0] + ")")
+                        .text(function() {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1),
+                                sum = _(dd).reduce(function(memo, v) {
+                                    return memo + v.supporting + v.opposing;
+                                }, 0);
+
+                                return "Total $" + helper.dollar_format(sum) + " spent toward " + candidate.capitalize();
+                        });
+                });
     };
 });

@@ -277,26 +277,21 @@ function(
             });
         }
 
-        function get_translate(translate) {
-            var match = /^translate\(([^,]+),(.+)\)/.exec(translate);
-            return [parseFloat(match[1]), parseFloat(match[2])];
-        }
-
         // Based off of https://jsfiddle.net/thudfactor/HdwTH/
         function label_relax() {
             var adjusted = false;
             label_text_g
-                .filter(function(d) {
+                .filter(function() {
                     return d3.select(this.parentNode).attr("visibility") !== "hidden";
                 })
-                .each(function(d) {
+                .each(function() {
                     var a = this;
 
                     label_text_g
-                        .filter(function(d) {
+                        .filter(function() {
                             return d3.select(this.parentNode).attr("visibility") !== "hidden";
                         })
-                        .each(function (d) {
+                        .each(function () {
                             var b = this,
                                 da = d3.select(a),
                                 db = d3.select(b),
@@ -317,15 +312,14 @@ function(
 
                             adjusted = true;
 
-                            var fa = get_translate(da.attr("transform")),
-                                fb = get_translate(db.attr("transform")),
+                            var fa = helper.get_translate(da.attr("transform")),
+                                fb = helper.get_translate(db.attr("transform")),
                                 xa = fa[0],
                                 ya = fa[1],
                                 xb = fb[0],
                                 yb = fb[1],
                                 aa = da.datum().endAngle,
-                                ab = db.datum().endAngle;
-
+                                ab = db.datum().endAngle,
                                 adjust = ta === "start" && aa > ab || ta === "end" && aa < ab ? label_relax_delta : -label_relax_delta;
 
                             da.attr("transform", "translate(" + [xa, ya + adjust] + ")");
@@ -338,7 +332,7 @@ function(
                     var g_for_line = label_text_g.filter(function(dd, ii) {
                         return i === ii;
                     });
-                        y = get_translate(g_for_line.attr("transform"))[1];
+                        y = helper.get_translate(g_for_line.attr("transform"))[1];
                     return y;
                 });
 
@@ -354,34 +348,6 @@ function(
             .append("g")
                 .attr("class", "inner")
                 .attr("transform", "translate(" + [-radius_pack, -radius_pack] + ")");
-
-        //var drag = d3.drag()
-        //    .origin(function(d) {
-        //        return d;
-        //    })
-        //    .on("drag", function(d) {
-        //        var relative_x = d3.event.x - radius_pack,
-        //            relative_y = radius_pack - d3.event.y,
-        //            new_r = Math.sqrt(Math.pow(relative_x, 2) + Math.pow(relative_y, 2));
-
-        //        if(new_r >= radius_pack) {
-        //            return;
-        //        }
-        //        else {
-        //            d.x = d3.event.x;
-        //            d.y = d3.event.y;
-        //            d3.select(this).attr("transform", function(d) {
-        //                return "translate(" + [d.x, d.y] + ")";
-        //            });
-
-        //            //link.attr("d", function(dd) {
-        //            //    dd.node_x = relative_x;
-        //            //    dd.node_y = relative_y;
-
-        //            //    link_d_path(dd);
-        //            //});
-        //        }
-        //    });
 
         var bubble_inner = d3.pack()
             .size([2 * radius_pack, 2 * radius_pack])
