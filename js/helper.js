@@ -45,6 +45,5 @@ function(
         return [parseFloat(match[1]), parseFloat(match[2])];
     }
 
-
     return helper;
 });

@@ -89,11 +89,6 @@ section#contact {
     margin-bottom: 400px;
 }
 
-.line {
-    fill: none;
-    stroke-width: 1.5px;
-}
-
 .tick line {
     stroke: #fff;
 }
@@ -102,19 +97,31 @@ text {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
-.label-text {
+#viz_halo .label-text {
     alignment-baseline: middle;
     text-transform: uppercase;
 }
-.label-line {
+
+#viz_halo .label-line {
     stroke-width: 1;
     stroke: #fff;
 }
-.label-circle {
+
+#viz_halo .label-circle {
     fill: #fff;
+}
+
+#viz_halo .line {
+    fill: none;
+    stroke-width: 1.5px;
 }
 
 #viz_halo path,#viz_pies path {
     stroke: #363636;
     stroke-width: 1px;
+}
+
+#viz_timecharts .line {
+    fill: none;
+    stroke-width: 3px;
 }

@@ -22,17 +22,18 @@ function(
             green = data.green,
             red = data.red,
             width = Math.min($("#viz_timecharts").parent().innerWidth(), 1200) - margin.left - margin.right,
-            height = width * 0.5 - margin.top - margin.bottom,
-            font_size = height * 0.04,
+            height = width * 0.7 - margin.top - margin.bottom,
+            chart_height = height * 0.8;
+            font_size = height * 0.03,
             img_ratio = 190 / 616,
-            img_width = height / 2 * img_ratio,
+            img_width = chart_height / 2 * img_ratio,
             dates = _(data.timechart[0].data).pluck("date"),
             earliest = moment.utc("2015-05-01"),
             latest = moment.utc("2016-12-01"),
             election_date = moment.utc("2016-11-08"),
             max_spent = helper.round_nearest(data.stats.timechart.max_spent, 1000000, "up"),
             max_poll_range = helper.round_nearest(data.stats.timechart.max_poll_range, 5, "up"),
-            marker_height = height * 0.04,
+            marker_height = chart_height * 0.04,
             marker_width = marker_height * 1.3,
             marker_relax_delta = marker_height * 1.2,
             marker_relax_sleep = 10;
@@ -76,37 +77,75 @@ function(
             {"date": "2016-10-19", "name": "Third and final presidential general election debate", "link": null}
         ];
 
+        var legend_data = [
+            {
+                "data": [
+                    {
+                        "name": "Major event",
+                        "type": "marker",
+                        "color": "white"
+                    },
+                    {
+                        "name": "Republican debate",
+                        "type": "marker",
+                        "color": "red"
+                    },
+                    {
+                        "name": "Democratic debate",
+                        "type": "marker",
+                        "color": "blue"
+                    }
+                ]
+            },
+            {
+                "data": [
+                    {
+                        "name": "National poll %",
+                        "type": "line",
+                        "color": "steelblue"
+                    },
+                    {
+                        "name": "Total expenditure $",
+                        "type": "line",
+                        "color": "white"
+                    },
+                    {
+                        "name": "Supporting expenditure $",
+                        "type": "line",
+                        "color": green
+                    },
+                    {
+                        "name": "Opposing expenditure $",
+                        "type": "line",
+                        "color": red
+                    }
+                ]
+            }
+        ];
+
         var svg = d3.select("svg#viz_timecharts")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
             .append("g")
                 .attr("transform", "translate(" + [margin.left + img_width, margin.top] + ")");
 
-        var chart_g = svg.selectAll("g")
+        var img_g = svg.selectAll("g.img")
             .data(data.timechart)
             .enter()
             .append("g")
                 .attr("class", function(d) {
-                    return d.candidate;
+                    return d.candidate + " img";
                 })
                 .attr("transform", function(d, i) {
-                    var x = 0;
-                    var y = height / 2 * i;
-
-                    return "translate(" + [x, y] + ")";
+                    return "translate(" + [-img_width, chart_height / data.timechart.length * i] + ")";
                 });
 
-        var x_line = chart_g
-            .append("path")
-                .attr("d", "M0 " + height / 2 + " l" + (width - img_width) + " 0")
-                .style("stroke", "white");
-
-        var image = chart_g
+        var image = img_g
             .append("image")
-                .attr("x", -img_width)
+                .attr("x", 0)
                 .attr("y", 0)
                 .attr("width", img_width)
-                .attr("height", height / 2)
+                .attr("height", chart_height / 2)
                 .attr("xlink:href", function(d) {
                     return "/images/" + d.candidate + "_strip.jpg";
                 })
@@ -126,10 +165,10 @@ function(
 
         var y_spent = d3.scaleLinear()
             .domain([max_spent, 0])
-            .range([0, height / 2]);
+            .range([0, chart_height / data.timechart.length]);
 
         var y_poll = d3.scaleLinear()
-            .range([0, height / 2]);
+            .range([0, chart_height / data.timechart.length]);
 
         var line = d3.line()
             .x(function(d) {
@@ -139,7 +178,7 @@ function(
         var x_axis = svg
             .append("g")
                 .attr("class", "axis axis_x")
-                .attr("transform", "translate(" + [0, height] + ")")
+                .attr("transform", "translate(" + [0, chart_height] + ")")
                 .call(
                     d3.axisBottom(x)
                         .ticks(d3.timeMonth.every(1))
@@ -148,16 +187,33 @@ function(
         x_axis.selectAll("text")
             .attr("font-size", font_size)
             .attr("y", 0)
-            .attr("x", height * 0.03)
+            .attr("x", chart_height * 0.03)
             .attr("transform", "rotate(45)")
             .style("fill", "white")
             .style("text-anchor", "start");
+
+
+        var chart_g = svg.selectAll("g.chart")
+            .data(data.timechart)
+            .enter()
+            .append("g")
+                .attr("class", function(d) {
+                    return d.candidate + " chart";
+                })
+                .attr("transform", function(d, i) {
+                    return "translate(" + [0, chart_height / data.timechart.length * i] + ")";
+                });
+
+        var x_line = chart_g
+            .append("path")
+                .attr("d", "M0 " + chart_height / data.timechart.length + " l" + (width - img_width) + " 0")
+                .style("stroke", "white");
 
         // Election Day
         svg
             .append("path")
                 .attr("class", "election_day")
-                .attr("d", "M" + x(election_date) + " 0 l0 " + height)
+                .attr("d", "M" + x(election_date) + " 0 l0 " + chart_height)
                 .attr("stroke", "orange")
                 .attr("stroke-width", 2);
 
@@ -167,10 +223,22 @@ function(
                 .attr("text-anchor", "middle")
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("transform", "translate(" + [x(election_date) * 1.005, height / 2] + ")rotate(90)")
+                .attr("transform", "translate(" + [x(election_date) * 1.005, chart_height / data.timechart.length] + ")rotate(90)")
                 .style("font-size", font_size)
                 .style("fill", "orange")
                 .text("Election Day, Nov. 8th")
+
+        chart_g
+            .append("path")
+                .attr("class", "line")
+                .attr("d", function(d) {
+                    line
+                        .y(function(dd) {
+                            return y_spent(dd.total);
+                        });
+                    return line(d.data);
+                })
+                .style("stroke", "white");
 
         chart_g
             .append("path")
@@ -227,7 +295,7 @@ function(
 
         var timeline_hover_line = timeline
             .append("path")
-                .attr("d", "M0 0 l0 " + height)
+                .attr("d", "M0 0 l0 " + chart_height)
                 .style("stroke", "white")
                 .style("visibility", "hidden");
 
@@ -240,17 +308,16 @@ function(
                     return "translate(" + [x(moment.utc(d.date)), -3] + ")";
                 });
 
-        var timeline_marker_d = function() {
+        var marker_d = function() {
             var w = marker_width,
                 h = marker_height,
                 path = d3.path();
 
             path.moveTo(0, 0);
-            path.lineTo(w / 2, -h);
-            path.lineTo(w / 2, -h);
+            path.quadraticCurveTo(w / 2, 0, w / 2, -h);
             path.lineTo(-w / 2, -h);
-            path.lineTo(-w / 2, -h);
-            path.closePath();
+            path.moveTo(0, 0);
+            path.quadraticCurveTo(-w / 2, 0, -w / 2, -h);
 
             return path.toString();
         }
@@ -258,7 +325,7 @@ function(
         var timeline_marker = timeline_event
             .append("path")
                 .attr("class", "marker")
-                .attr("d", timeline_marker_d)
+                .attr("d", marker_d)
                 .attr("transform", "translate(0,0)")
                 .style("fill", function(d) {
                     if(d.name.indexOf("debate") > -1) {
@@ -360,6 +427,7 @@ function(
 
         function get_color(d) {
             switch(d) {
+                case "total": return "white";
                 case "supporting": return green;
                 case "opposing": return red;
                 case "poll": return "steelblue";
@@ -392,10 +460,10 @@ function(
                 .append("circle")
                     .attr("class", "hover")
                     .attr("visibility", "hidden")
-                    .attr("r", height * 0.02)
+                    .attr("r", chart_height * 0.02)
                     .attr("x", 0)
                     .attr("y", 0)
-                    .attr("stroke-width", height * 0.008)
+                    .attr("stroke-width", chart_height * 0.008)
                     .attr("fill", "none");
 
         var hover_text = hover_data
@@ -404,18 +472,11 @@ function(
                 .attr("visibility", "hidden")
                 .style("font-size", font_size);
 
-        var hover_total = hover_g
-            .append("text")
-                .attr("class", "hover")
-                .attr("visibility", "hidden")
-                .style("font-size", font_size)
-                .style("fill", "white");
-
         var hover_line = hover
             .append("path")
                 .attr("class", "hover")
                 .attr("visibility", "hidden")
-                .attr("d", "M0 0 l0 " + height)
+                .attr("d", "M0 0 l0 " + chart_height)
                 .attr("stroke", "white");
 
         var hover_date = hover
@@ -441,7 +502,7 @@ function(
         var hover_rect = svg
             .append("rect")
                 .attr("width", width - img_width)
-                .attr("height", height)
+                .attr("height", chart_height)
                 .style("fill", "none")
                 .style("pointer-events", "all")
                 .on("mouseover", function() {
@@ -540,7 +601,7 @@ function(
                     hover_text
                         .attr("x", index < dates.length * 0.7 ? width * 0.01 : -width * 0.01)
                         .attr("y", function(d, i) {
-                            return (i + 1) * height / 2 * 0.2;
+                            return (i + 1) * chart_height / 2 * 0.2;
                         })
                         .attr("text-anchor", index < dates.length * 0.7 ? "start" : "end")
                         .attr("transform", "translate(" + [x(date), 0] + ")")
@@ -560,21 +621,70 @@ function(
                                 return "$" + helper.dollar_format(value) + " - Total $" + helper.dollar_format(sum) + " spent " + d + " " + candidate.capitalize();
                             }
                         });
-
-                    hover_total
-                        .attr("x", index < dates.length * 0.7 ? width * 0.01 : -width * 0.01)
-                        .attr("y", (hover_text._groups[0].length + 1) * height / 2 * 0.2)
-                        .attr("text-anchor", index < dates.length * 0.7 ? "start" : "end")
-                        .attr("transform", "translate(" + [x(date), 0] + ")")
-                        .text(function() {
-                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
-                                dd = _(data.timechart).findWhere({"candidate": candidate}).data.slice(0, index + 1),
-                                sum = _(dd).reduce(function(memo, v) {
-                                    return memo + v.supporting + v.opposing;
-                                }, 0);
-
-                                return "Total $" + helper.dollar_format(sum) + " spent toward " + candidate.capitalize();
-                        });
                 });
+
+        var legend = svg
+            .append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(" + [0, chart_height] + ")");
+
+        var legend_sub = legend.selectAll("g.sub")
+            .data(legend_data)
+            .enter()
+            .append("g")
+                .attr("class", "sub")
+                .attr("transform", function(d, i) {
+                    return "translate(" + [width / legend_data.length * i + width * 0.1, height * 0.2] + ")";
+                });
+
+        var legend_label_g = legend_sub.selectAll("g.legend_label")
+            .data(function(d) {
+                return d.data;
+            })
+            .enter()
+            .append("g")
+                .attr("class", "legend_label")
+                .attr("transform", function(d, i) {
+                    return "translate(" + [0, font_size * 1.5 * i] + ")";
+                });
+
+        legend_label_g
+            .append("path")
+                .attr("class", function(d) {
+                    return d.type;
+                })
+                .attr("d", function(d) {
+                    if(d.type === "marker") {
+                        return marker_d();
+                    }
+                    else {
+                        return "M0 0 l-30 0";
+                    }
+                })
+                .attr("stroke", function(d) {
+                    return d.color;
+                })
+                .attr("fill", function(d) {
+                    return d.color;
+                })
+                .attr("transform", function(d) {
+                    if(d.type === "marker") {
+                        return "translate(" + [-font_size * 0.9, font_size * 0.15] + ")";
+                    }
+                    else {
+                        return "translate(" + [-font_size * 0.3, -font_size * 0.3] + ")";
+                    }
+                });
+
+        legend_label_g
+            .append("text")
+                .style("font-size", font_size)
+                .style("fill", function(d) {
+                    return "white";
+                })
+                .text(function(d) {
+                    return d.name;
+                });
+
     };
 });
