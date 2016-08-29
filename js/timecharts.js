@@ -14,7 +14,7 @@ function(
 ) {
     return function(data) {
         var margin = {
-                "top": 100,
+                "top": 110,
                 "right": 50,
                 "bottom": 100,
                 "left": 50
@@ -32,36 +32,40 @@ function(
             election_date = moment.utc("2016-11-08"),
             max_spent = helper.round_nearest(data.stats.timechart.max_spent, 1000000, "up"),
             max_poll_range = helper.round_nearest(data.stats.timechart.max_poll_range, 5, "up"),
-            marker_width = 20,
-            marker_height = 15,
+            marker_height = height * 0.04,
+            marker_width = marker_height * 1.3,
             marker_relax_delta = marker_height * 1.2,
             marker_relax_sleep = 10;
 
         var timeline_data = [
             {"date": "2015-06-16", "name": "Donald Trump declares for the Republican presidential nomination", "link": null},
-            {"date": "2015-08-06", "name": "First Republican debate", "link": null},
-            {"date": "2015-09-16", "name": "Second Republican debate", "link": null},
-            {"date": "2015-10-13", "name": "First Democratic debate", "link": null},
-            {"date": "2015-10-28", "name": "Third Republican debate", "link": null},
-            {"date": "2015-11-10", "name": "Fourth Republican debate", "link": null},
-            {"date": "2015-11-14", "name": "Second Democratic debate", "link": null},
-            {"date": "2015-12-15", "name": "Fifth Republican debate", "link": null},
-            {"date": "2015-12-19", "name": "Third Democratic debate", "link": null},
-            {"date": "2016-01-14", "name": "Sixth Republican debate", "link": null},
-            {"date": "2016-01-17", "name": "Fourth Democratic debate", "link": null},
-            {"date": "2016-01-28", "name": "Seventh Republican debate", "link": null},
-            {"date": "2016-02-04", "name": "Fifth Democratic debate", "link": null},
-            {"date": "2016-02-06", "name": "Eighth Republican debate", "link": null},
-            {"date": "2016-02-11", "name": "Sixth Democratic debate", "link": null},
-            {"date": "2016-02-13", "name": "Ninth Republican debate", "link": null},
-            {"date": "2016-02-25", "name": "Tenth Republican debate", "link": null},
+            {"date": "2015-08-06", "name": "1st Republican debate", "link": null},
+            {"date": "2015-09-16", "name": "2nd Republican debate", "link": null},
+            {"date": "2015-10-13", "name": "1st Democratic debate", "link": null},
+            {"date": "2015-10-28", "name": "3rd Republican debate", "link": null},
+            {"date": "2015-11-10", "name": "4th Republican debate", "link": null},
+            {"date": "2015-11-14", "name": "2nd Democratic debate", "link": null},
+            {"date": "2015-12-15", "name": "5th Republican debate", "link": null},
+            {"date": "2015-12-19", "name": "3rd Democratic debate", "link": null},
+            {"date": "2016-01-14", "name": "6th Republican debate", "link": null},
+            {"date": "2016-01-17", "name": "4th Democratic debate", "link": null},
+            {"date": "2016-01-28", "name": "7th Republican debate", "link": null},
+            {"date": "2016-02-04", "name": "5th Democratic debate", "link": null},
+            {"date": "2016-02-06", "name": "8th Republican debate", "link": null},
+            {"date": "2016-02-11", "name": "6th Democratic debate", "link": null},
+            {"date": "2016-02-13", "name": "9th Republican debate", "link": null},
+            {"date": "2016-02-20", "name": "Jeb Bush withdraws from Republican presidential nomination", "link": null},
+            {"date": "2016-02-25", "name": "10th Republican debate", "link": null},
             {"date": "2016-03-01", "name": "Super Tuesday", "link": "https://en.wikipedia.org/wiki/Super_Tuesday"},
-            {"date": "2016-03-03", "name": "Eleventh Republican debate", "link": null},
-            {"date": "2016-03-06", "name": "Seventh Democratic debate", "link": null},
-            {"date": "2016-03-09", "name": "Eighth Democratic debate", "link": null},
-            {"date": "2016-03-10", "name": "Twelfth and final Republican debate", "link": null},
-            {"date": "2016-04-14", "name": "Ninth and final Democratic debate", "link": null},
+            {"date": "2016-03-03", "name": "11th Republican debate", "link": null},
+            {"date": "2016-03-04", "name": "Ben Carson withdraws from Republican presidential nomination", "link": null},
+            {"date": "2016-03-06", "name": "7th Democratic debate", "link": null},
+            {"date": "2016-03-09", "name": "8th Democratic debate", "link": null},
+            {"date": "2016-03-10", "name": "12th and final Republican debate", "link": null},
+            {"date": "2016-03-15", "name": "Marco Rubio withdraws from Republican presidential nomination", "link": null},
+            {"date": "2016-04-14", "name": "9th and final Democratic debate", "link": null},
             {"date": "2016-05-03", "name": "Ted Cruz withdraws from Republican presidential nomination", "link": null},
+            {"date": "2016-05-04", "name": "John Kasich withdraws from Republican presidential nomination", "link": null},
             {"date": "2016-07-12", "name": "Bernie Sanders endorses Hillary Clinton", "link": null},
             {"date": "2016-07-18", "name": "Republican National Convention", "link": "https://en.wikipedia.org/wiki/2016_Republican_National_Convention"},
             {"date": "2016-07-23", "name": "Democratic National Committee email leak", "link": "https://en.wikipedia.org/wiki/2016_Democratic_National_Committee_email_leak"},
@@ -257,7 +261,16 @@ function(
                 .attr("d", timeline_marker_d)
                 .attr("transform", "translate(0,0)")
                 .style("fill", function(d) {
-                    return d.name.indexOf("debate") > -1 ? "yellow" : "white";
+                    if(d.name.indexOf("debate") > -1) {
+                        if(d.name.indexOf("Republican") > -1) {
+                            return "red";
+                        }
+                        else if(d.name.indexOf("Democratic") > -1) {
+                            return "blue";
+                        }
+                    }
+
+                    return "white";
                 })
                 .style("opacity", 0.8)
                 .on("mouseover", function(d) {
@@ -379,10 +392,10 @@ function(
                 .append("circle")
                     .attr("class", "hover")
                     .attr("visibility", "hidden")
-                    .attr("r", 6)
+                    .attr("r", height * 0.02)
                     .attr("x", 0)
                     .attr("y", 0)
-                    .attr("stroke-width", 2)
+                    .attr("stroke-width", height * 0.008)
                     .attr("fill", "none");
 
         var hover_text = hover_data
@@ -410,7 +423,7 @@ function(
                 .attr("class", "hover")
                 .attr("visibility", "hidden")
                 .attr("x", 0)
-                .attr("y", -25)
+                .attr("y", -font_size * 1.6)
                 .attr("text-anchor", "middle")
                 .style("font-size", font_size)
                 .style("fill", "white");
@@ -420,7 +433,7 @@ function(
                 .attr("class", "hover")
                 .attr("visibility", "hidden")
                 .attr("x", 0)
-                .attr("y", -5)
+                .attr("y", -font_size * 0.5)
                 .attr("text-anchor", "middle")
                 .style("font-size", font_size)
                 .style("fill", "white");
@@ -525,11 +538,11 @@ function(
                         });
 
                     hover_text
-                        .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                        .attr("x", index < dates.length * 0.7 ? width * 0.01 : -width * 0.01)
                         .attr("y", function(d, i) {
                             return (i + 1) * height / 2 * 0.2;
                         })
-                        .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                        .attr("text-anchor", index < dates.length * 0.7 ? "start" : "end")
                         .attr("transform", "translate(" + [x(date), 0] + ")")
                         .style("fill", get_color)
                         .text(function(d) {
@@ -549,9 +562,9 @@ function(
                         });
 
                     hover_total
-                        .attr("x", index < dates.length * 0.5 ? 20 : -20)
+                        .attr("x", index < dates.length * 0.7 ? width * 0.01 : -width * 0.01)
                         .attr("y", (hover_text._groups[0].length + 1) * height / 2 * 0.2)
-                        .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
+                        .attr("text-anchor", index < dates.length * 0.7 ? "start" : "end")
                         .attr("transform", "translate(" + [x(date), 0] + ")")
                         .text(function() {
                             var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
