@@ -128,8 +128,6 @@ function(
                         return _(memo).extend(value);
                     }, {});
 
-                    obj.total = obj.supporting + obj.opposing;
-
                     obj.date = moment.utc(date);
 
                     var poll = _(json_polls.estimates_by_date).findWhere({"date": date});
@@ -151,13 +149,14 @@ function(
         });
 
         _(data.timechart).each(function(v) {
-            var max_total = _(v.data).chain().pluck("total").max().value(),
+            var max_supporting = _(v.data).chain().pluck("supporting").max().value(),
+                max_opposing = _(v.data).chain().pluck("opposing").max().value(),
                 p_max = _(v.data).chain().pluck("poll").compact().max().value(),
                 p_min = _(v.data).chain().pluck("poll").compact().min().value();
 
             data.stats.timechart.min_poll[v.candidate] = p_min;
 
-            data.stats.timechart.max_spent = Math.max(data.stats.timechart.max_spent, max_total);
+            data.stats.timechart.max_spent = Math.max(data.stats.timechart.max_spent, max_supporting, max_opposing);
             data.stats.timechart.max_poll_range = Math.max(data.stats.timechart.max_poll_range, p_max - p_min);
         });
 

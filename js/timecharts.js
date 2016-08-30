@@ -105,11 +105,6 @@ function(
                         "color": "steelblue"
                     },
                     {
-                        "name": "Total expenditure $",
-                        "type": "line",
-                        "color": "white"
-                    },
-                    {
                         "name": "Supporting expenditure $",
                         "type": "line",
                         "color": green
@@ -234,18 +229,6 @@ function(
                 .attr("d", function(d) {
                     line
                         .y(function(dd) {
-                            return y_spent(dd.total);
-                        });
-                    return line(d.data);
-                })
-                .style("stroke", "white");
-
-        chart_g
-            .append("path")
-                .attr("class", "line")
-                .attr("d", function(d) {
-                    line
-                        .y(function(dd) {
                             return y_spent(dd.supporting);
                         });
                     return line(d.data);
@@ -305,7 +288,7 @@ function(
             .append("g")
                 .attr("class", "marker")
                 .attr("transform", function(d) {
-                    return "translate(" + [x(moment.utc(d.date)), -3] + ")";
+                    return "translate(" + [x(moment.utc(d.date)), -chart_height * 0.01] + ")";
                 });
 
         var marker_d = function() {
@@ -346,9 +329,7 @@ function(
                             return dd !== d;
                         })
                         .transition()
-                        .style("opacity", 0.0)
-                        .delay(0)
-                        .style("visibility", "hidden");
+                        .style("opacity", 0.2);
 
                     timeline_hover_line
                         .transition()
@@ -365,9 +346,7 @@ function(
 
                     timeline.selectAll("path")
                         .transition()
-                        .style("opacity", 0.8)
-                        .delay(0)
-                        .style("visibility", "visible");
+                        .style("opacity", 0.8);
                 })
                 .on("mousemove", helper.tooltip_position);
 
@@ -427,7 +406,6 @@ function(
 
         function get_color(d) {
             switch(d) {
-                case "total": return "white";
                 case "supporting": return green;
                 case "opposing": return red;
                 case "poll": return "steelblue";
@@ -457,20 +435,28 @@ function(
             .enter();
 
         var hover_circle = hover_data
-                .append("circle")
-                    .attr("class", "hover")
-                    .attr("visibility", "hidden")
-                    .attr("r", chart_height * 0.02)
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("stroke-width", chart_height * 0.008)
-                    .attr("fill", "none");
+            .append("circle")
+                .attr("class", "hover")
+                .attr("visibility", "hidden")
+                .attr("r", chart_height * 0.02)
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("stroke-width", chart_height * 0.008)
+                .attr("fill", "none");
 
         var hover_text = hover_data
             .append("text")
                 .attr("class", "hover")
+                .attr("alignment-baseline", "middle")
                 .attr("visibility", "hidden")
                 .style("font-size", font_size);
+
+        var hover_text_line = hover_data
+            .append("path")
+                .attr("class", "hover")
+                .attr("stroke-width", chart_height * 0.008)
+                .attr("stroke-linecap", "round")
+                .attr("visibility", "hidden");
 
         var hover_line = hover
             .append("path")
@@ -497,7 +483,7 @@ function(
                 .attr("y", -font_size * 0.5)
                 .attr("text-anchor", "middle")
                 .style("font-size", font_size)
-                .style("fill", "white");
+                .style("fill", "steelblue");
 
         var hover_rect = svg
             .append("rect")
@@ -509,17 +495,17 @@ function(
                     d3.selectAll(".hover")
                         .attr("visibility", "visible");
 
-                    chart_g.selectAll("path")
+                    chart_g.selectAll("path.line")
                         .transition()
-                        .style("opacity", 0.4);
+                        .style("opacity", 0.2);
 
                     x_axis.selectAll(".election_day")
                         .transition()
-                        .style("opacity", 0.4);
+                        .style("opacity", 0.2);
 
                     timeline_event
                         .transition()
-                        .style("opacity", 0.0);
+                        .style("opacity", 0.2);
                 })
                 .on("mouseout", function() {
                     d3.selectAll(".hover")
@@ -599,11 +585,11 @@ function(
                         });
 
                     hover_text
-                        .attr("x", index < dates.length * 0.7 ? width * 0.01 : -width * 0.01)
+                        .attr("x", index < dates.length * 0.5 ? width * 0.03 : -width * 0.03)
                         .attr("y", function(d, i) {
-                            return (i + 1) * chart_height / 2 * 0.2;
+                            return (i + 1) * chart_height / 8;
                         })
-                        .attr("text-anchor", index < dates.length * 0.7 ? "start" : "end")
+                        .attr("text-anchor", index < dates.length * 0.5 ? "start" : "end")
                         .attr("transform", "translate(" + [x(date), 0] + ")")
                         .style("fill", get_color)
                         .text(function(d) {
@@ -618,9 +604,30 @@ function(
                                 return value === null ? "No poll data" : "Poll " + value + "%";
                             }
                             else {
-                                return "$" + helper.dollar_format(value) + " - Total $" + helper.dollar_format(sum) + " spent " + d + " " + candidate.capitalize();
+                                return "$" + helper.dollar_format(value) + " (running total of $" + helper.dollar_format(sum) + ")";
                             }
                         });
+
+                    hover_text_line
+                        .attr("d", function(d, i) {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                value = get_data(date, candidate)[d],
+                                p_min = helper.round_nearest(data.stats.timechart.min_poll[candidate], 5, "down"),
+                                x_offset = index < dates.length * 0.5 ? width * 0.025 : -width * 0.025;
+
+                            y_poll.domain([p_min + max_poll_range, p_min]);
+
+                            var x0 = x(date),
+                                y0 = d === "poll" ? y_poll(value) : y_spent(value),
+                                x1 = x(date) + x_offset,
+                                y1 = (i + 1) * chart_height / 8,
+                                t = Math.atan2(y1 - y0, x1 - x0),
+                                degree = t * 180 / Math.PI,
+                                r = chart_height * 0.02;
+
+                            return "M" + (x0 + r * Math.cos(t)) + " " + (y0 + r * Math.sin(t)) + " L" + x1 + " " + y1;
+                        })
+                        .attr("stroke", get_color);
                 });
 
         var legend = svg
