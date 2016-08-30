@@ -609,6 +609,12 @@ function(
                         });
 
                     hover_text_line
+                        .attr("visibility", function(d) {
+                            var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
+                                value = get_data(date, candidate)[d];
+
+                            return value === null ? "hidden" : "visible";
+                        })
                         .attr("d", function(d, i) {
                             var candidate = d3.select(this.parentNode).attr("class").split(" ")[0],
                                 value = get_data(date, candidate)[d],
