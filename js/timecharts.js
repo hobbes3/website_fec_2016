@@ -497,15 +497,15 @@ function(
 
                     chart_g.selectAll("path.line")
                         .transition()
-                        .style("opacity", 0.2);
+                        .style("opacity", 0.4);
 
-                    x_axis.selectAll(".election_day")
+                    svg.selectAll(".election_day")
                         .transition()
-                        .style("opacity", 0.2);
+                        .style("opacity", 0.4);
 
                     timeline_event
                         .transition()
-                        .style("opacity", 0.2);
+                        .style("opacity", 0.4);
                 })
                 .on("mouseout", function() {
                     d3.selectAll(".hover")

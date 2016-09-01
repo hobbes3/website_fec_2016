@@ -25,7 +25,7 @@ kwargs_oneshot = {
 }
 
 stats_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=*
+search index=fec sourcetype=fec_schedule_e candidate=trump OR candidate=clinton
 | stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | sort 0 -spent
@@ -47,7 +47,7 @@ f = open("/data/www/data/schedule_e_stats.json", "w")
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=*
+search index=fec sourcetype=fec_schedule_e candidate=trump OR candidate=clinton
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | eval id=candidate."_".toward
 | timechart span=1w sum(expenditure_amount) by id
@@ -80,6 +80,28 @@ print("Done.")
 f = open("/data/www/data/schedule_e_latest.json", "w")
 
 print(latest_result, file=f)
+
+kwargs_oneshot["earliest_time"] = 0
+
+stats_by_committee_type_query = """
+search index=fec sourcetype=fec_schedule_e
+| rename "committee.committee_type_full" as ct
+| eval committee_type=if(match(ct, "Super|Party - Qualified|PAC -|PAC.+Nonqualified"), ct, "OTHER")
+| stats sum(expenditure_amount) as spent by committee_type candidate date_year
+| lookup presidential_elections.csv date_year
+| where match(candidates, candidate)
+| stats sum(spent) as spent by committee_type election_year
+"""
+
+print("Running timechart_query...")
+
+stats_by_committee_type_result = service.jobs.oneshot(stats_by_committee_type_query, **kwargs_oneshot)
+
+print("Done.")
+
+f = open("/data/www/data/schedule_e_stats_by_committee_type.json", "w")
+
+print(stats_by_committee_type_result, file=f)
 
 attempts = 0
 

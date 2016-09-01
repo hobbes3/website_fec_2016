@@ -659,189 +659,194 @@ function(
                     this._current = d;
                 });
 
-        d3.selectAll("#toward_controls button")
-            .on("click", function() {
-                var toward_option_previous = toward_option;
-                toward_option = this.value;
+        $("#toward_controls input[name=toward]").on("change", function() {
+            helper.tooltip.style("visibility", "hidden");
+            path_outer_g.style("opacity", 1.0);
+            link.style("opacity", opacity_link);
+            path_inner_g.style("opacity", 1.0);
+            image.style("opacity", 1.0);
 
-                if(toward_option === toward_option_previous) {
-                    return;
-                }
+            var toward_option_previous = toward_option;
+            toward_option = this.value;
 
-                animation = true;
+            if(toward_option === toward_option_previous) {
+                return;
+            }
 
-                path_outer.data(pie_outer(data.outer))
-                    .transition(t)
-                        .attrTween("d", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return arc_outer(i(t));
-                            };
-                        });
+            animation = true;
 
-                label_group
-                    .attr("visibility", "visible")
-                    .transition(t)
-                        .style("opacity", function(d) {
-                            return d.data.toward === toward_option || toward_option === "both" ? 1.0 : 0.0;
-                        })
-                        .on("end", function() {
-                            d3.select(this).attr("visibility", function(d) {
-                                return d.data.toward === toward_option || toward_option === "both" ? "visible" : "hidden";
-                            });
-                        });
-
-                label_circle.data(pie_outer(data.outer))
-                    .transition(t)
-                        .attrTween("transform", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return "translate(" + arc_outer.centroid(i(t)) + ")";
-                            };
-                        });
-
-                label_line.data(pie_outer(data.outer))
-                    .transition(t)
-                        .attrTween("x1", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return arc_outer.centroid(i(t))[0];
-                            };
-                        })
-                        .attrTween("y1", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return arc_outer.centroid(i(t))[1];
-                            };
-                        })
-                        .attrTween("x2", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                var c = arc_outer.centroid(i(t)),
-                                    mid_angle = Math.atan2(c[1], c[0]);
-                                return Math.cos(mid_angle) * radius_label;
-                            };
-                        })
-                        .attrTween("y2", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                var c = arc_outer.centroid(i(t)),
-                                    mid_angle = Math.atan2(c[1], c[0]);
-                                return Math.sin(mid_angle) * radius_label;
-                            };
-                        });
-
-                label_text_g.data(pie_outer(data.outer))
-                    .transition(t)
-                        .attrTween("transform", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                var c = arc_outer.centroid(i(t)),
-                                    mid_angle = Math.atan2(c[1], c[0]),
-                                    x = Math.cos(mid_angle) * radius_label,
-                                    adjust = x > 0 ? 5 : -5,
-                                    label_x = x + adjust,
-                                    label_y = Math.sin(mid_angle) * radius_label;
-                                return "translate(" + [label_x, label_y] + ")";
-                            };
-                        });
-
-                function end_all(transition, callback) {
-                    var n = 0;
-                    transition
-                        .on("start", function() { ++n; })
-                        .on("end", function() {
-                            if(!--n) callback.apply(this, arguments);
-                        });
-                }
-
-                label_text.data(pie_outer(data.outer))
-                    .transition(t)
-                        .attrTween("text-anchor", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                var c = arc_outer.centroid(i(t)),
-                                    mid_angle = Math.atan2(c[1], c[0]),
-                                    x = Math.cos(mid_angle) * radius_label;
-                                return x > 0 ? "start" : "end";
-                            };
-                        })
-                        .call(end_all, function() {
-                            animation = false;
-                            mouseout_default();
-                            label_relax();
-                        });
-
-                root = d3.hierarchy({"children": data.inner})
-                    .sum(function(d) {
-                        return _(d.data).chain()
-                            .filter(function(v) {
-                                return v.toward === toward_option || toward_option === "both";
-                            })
-                            .pluck("spent")
-                            .reduce(function(memo, num) {
-                                return memo + num;
-                            }, 0)
-                            .value();
+            path_outer.data(pie_outer(data.outer))
+                .transition(t)
+                    .attrTween("d", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return arc_outer(i(t));
+                        };
                     });
 
-                node_inner_g.data(bubble_inner(root).children)
-                    .transition(t)
-                        .attr("transform", function(d) {
-                            return "translate(" + [d.x, d.y] + ")"
-                        });
-
-                path_inner
-                    .data(function(d) {
-                        return pie_inner(d.data.data).map(function(m) {
-                            m.r = d.r;
-                            return m;
-                        })
+            label_group
+                .attr("visibility", "visible")
+                .transition(t)
+                    .style("opacity", function(d) {
+                        return d.data.toward === toward_option || toward_option === "both" ? 1.0 : 0.0;
                     })
-                    .transition(t)
-                        .attrTween("d", function(d) {
-                            d.innerRadius = d.r - thickness;
-                            d.outerRadius = d.r;
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return arc_inner(i(t));
-                            };
+                    .on("end", function() {
+                        d3.select(this).attr("visibility", function(d) {
+                            return d.data.toward === toward_option || toward_option === "both" ? "visible" : "hidden";
                         });
+                    });
 
-                link.data(link_data(data))
-                    .transition(t)
-                        .attrTween("d", function(d) {
-                            var i = d3.interpolate(this._current, d);
-                            this._current = i(0);
-                            return function(t) {
-                                return link_d_path(i(t));
-                            };
-                        });
+            label_circle.data(pie_outer(data.outer))
+                .transition(t)
+                    .attrTween("transform", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return "translate(" + arc_outer.centroid(i(t)) + ")";
+                        };
+                    });
 
-                image.data(bubble_inner(root).children)
-                    .transition(t)
-                        .attr("x", function(d) {
-                            return thickness - d.r;
-                        })
-                        .attr("y", function(d) {
-                            return thickness - d.r;
-                        })
-                        .attr("width", function(d) {
-                            return 2 * (d.r - thickness);
-                        })
-                        .attr("height", function(d) {
-                            return 2 * (d.r - thickness);
-                        });
+            label_line.data(pie_outer(data.outer))
+                .transition(t)
+                    .attrTween("x1", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return arc_outer.centroid(i(t))[0];
+                        };
+                    })
+                    .attrTween("y1", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return arc_outer.centroid(i(t))[1];
+                        };
+                    })
+                    .attrTween("x2", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            var c = arc_outer.centroid(i(t)),
+                                mid_angle = Math.atan2(c[1], c[0]);
+                            return Math.cos(mid_angle) * radius_label;
+                        };
+                    })
+                    .attrTween("y2", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            var c = arc_outer.centroid(i(t)),
+                                mid_angle = Math.atan2(c[1], c[0]);
+                            return Math.sin(mid_angle) * radius_label;
+                        };
+                    });
 
-            });
+            label_text_g.data(pie_outer(data.outer))
+                .transition(t)
+                    .attrTween("transform", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            var c = arc_outer.centroid(i(t)),
+                                mid_angle = Math.atan2(c[1], c[0]),
+                                x = Math.cos(mid_angle) * radius_label,
+                                adjust = x > 0 ? 5 : -5,
+                                label_x = x + adjust,
+                                label_y = Math.sin(mid_angle) * radius_label;
+                            return "translate(" + [label_x, label_y] + ")";
+                        };
+                    });
+
+            function end_all(transition, callback) {
+                var n = 0;
+                transition
+                    .on("start", function() { ++n; })
+                    .on("end", function() {
+                        if(!--n) callback.apply(this, arguments);
+                    });
+            }
+
+            label_text.data(pie_outer(data.outer))
+                .transition(t)
+                    .attrTween("text-anchor", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            var c = arc_outer.centroid(i(t)),
+                                mid_angle = Math.atan2(c[1], c[0]),
+                                x = Math.cos(mid_angle) * radius_label;
+                            return x > 0 ? "start" : "end";
+                        };
+                    })
+                    .call(end_all, function() {
+                        animation = false;
+                        mouseout_default();
+                        label_relax();
+                    });
+
+            root = d3.hierarchy({"children": data.inner})
+                .sum(function(d) {
+                    return _(d.data).chain()
+                        .filter(function(v) {
+                            return v.toward === toward_option || toward_option === "both";
+                        })
+                        .pluck("spent")
+                        .reduce(function(memo, num) {
+                            return memo + num;
+                        }, 0)
+                        .value();
+                });
+
+            node_inner_g.data(bubble_inner(root).children)
+                .transition(t)
+                    .attr("transform", function(d) {
+                        return "translate(" + [d.x, d.y] + ")"
+                    });
+
+            path_inner
+                .data(function(d) {
+                    return pie_inner(d.data.data).map(function(m) {
+                        m.r = d.r;
+                        return m;
+                    })
+                })
+                .transition(t)
+                    .attrTween("d", function(d) {
+                        d.innerRadius = d.r - thickness;
+                        d.outerRadius = d.r;
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return arc_inner(i(t));
+                        };
+                    });
+
+            link.data(link_data(data))
+                .transition(t)
+                    .attrTween("d", function(d) {
+                        var i = d3.interpolate(this._current, d);
+                        this._current = i(0);
+                        return function(t) {
+                            return link_d_path(i(t));
+                        };
+                    });
+
+            image.data(bubble_inner(root).children)
+                .transition(t)
+                    .attr("x", function(d) {
+                        return thickness - d.r;
+                    })
+                    .attr("y", function(d) {
+                        return thickness - d.r;
+                    })
+                    .attr("width", function(d) {
+                        return 2 * (d.r - thickness);
+                    })
+                    .attr("height", function(d) {
+                        return 2 * (d.r - thickness);
+                    });
+
+        });
     };
 });
