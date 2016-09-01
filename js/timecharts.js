@@ -636,12 +636,12 @@ function(
                         .attr("stroke", get_color);
                 });
 
-        var legend = svg
+        var legend_g = svg
             .append("g")
                 .attr("class", "legend")
                 .attr("transform", "translate(" + [0, chart_height] + ")");
 
-        var legend_sub = legend.selectAll("g.sub")
+        var legend_sub = legend_g.selectAll("g.sub")
             .data(legend_data)
             .enter()
             .append("g")
@@ -692,9 +692,7 @@ function(
         legend_label_g
             .append("text")
                 .style("font-size", font_size)
-                .style("fill", function(d) {
-                    return "white";
-                })
+                .style("fill", "white")
                 .text(function(d) {
                     return d.name;
                 });

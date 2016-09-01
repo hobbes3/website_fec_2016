@@ -20,10 +20,28 @@ function(
             green = data.green,
             red = data.red,
             width = Math.min($("#viz_pies").parent().innerWidth(), 850) - margin.left - margin.right,
-            height = width * 0.4 - margin.top - margin.bottom,
-            radius = height / 2 * 0.8,
+            height = width * 0.5 - margin.top - margin.bottom,
+            chart_height = height * 0.8;
+            radius = chart_height / 2 * 0.8,
             thickness = radius * 0.2,
-            font_size = height * 0.07;
+            font_size = height * 0.05;
+
+        var legend_data = [
+            {
+                "data": [
+                    {
+                        "name": "Expenditure spent supporting a candidate",
+                        "type": "shape",
+                        "color": green
+                    },
+                    {
+                        "name": "Expenditure spent opposing a candidate",
+                        "type": "shape",
+                        "color": red
+                    }
+                ]
+            }
+        ];
 
         var svg = d3.select("svg#viz_pies")
                 .attr("width", width + margin.left + margin.right)
@@ -50,7 +68,7 @@ function(
                 .attr("class", "candidate")
                 .attr("transform", function(d, i) {
                     var x = (2 * i + 1) * width / (2 * data.stats.candidate.length);
-                    var y = height * 0.8 / 2;
+                    var y = chart_height * 0.8 / 2;
 
                     return "translate(" + [x, y] + ")";
                 });
@@ -66,6 +84,59 @@ function(
                 .text(function(d) {
                     return "$" + helper.dollar_format(d.total) + " spent on " + d.candidate.capitalize();
                 });
+
+        var legend_g = svg
+            .append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(" + [0, chart_height] +")");
+
+        var legend_sub = legend_g.selectAll("g.sub")
+            .data(legend_data)
+            .enter()
+            .append("g")
+                .attr("class", "sub")
+                .attr("transform", function(d, i) {
+                    return "translate(" + [width / legend_data.length * i + width * 0.3, height * 0.05] + ")";
+                });
+
+        var legend_label_g = legend_sub.selectAll("g.legend_label")
+            .data(function(d) {
+                return d.data;
+            })
+            .enter()
+            .append("g")
+                .attr("class", "legend_label")
+                .attr("transform", function(d, i) {
+                    return "translate(" + [0, font_size * 1.5 * i] + ")";
+                });
+
+        legend_label_g
+            .append("path")
+                .attr("class", function(d) {
+                    return d.type;
+                })
+                .attr("d", function(d) {
+                    var h = thickness,
+                        w = width * 0.05;
+
+                    return "M0 0 l-" + w + " 0 l0 " + h + " l" + w + " 0 Z";
+                })
+                .attr("stroke", function(d) {
+                    return d.color;
+                })
+                .attr("fill", function(d) {
+                    return d.color;
+                })
+                .attr("transform", "translate(" + [-font_size * 0.3, -font_size * 0.9] + ")");
+
+        legend_label_g
+            .append("text")
+                .style("font-size", font_size)
+                .style("fill", "white")
+                .text(function(d) {
+                    return d.name;
+                });
+
 
         var pie_data = candidate_g.selectAll("path.arc")
             .data(function(d) {
