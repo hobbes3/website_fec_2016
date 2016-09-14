@@ -1,2 +1,2 @@
 
-{"preview":false,"init_offset":0,"messages":[],"fields":[{"name":"_time"},{"name":"now","type":"num"}],"results":[{"_time":"2016-08-30T22:39:42.000+00:00","now":"1472601734"}], "highlighted":{}}
+{"preview":false,"init_offset":0,"messages":[],"fields":[{"name":"_time"},{"name":"now","type":"num"}],"results":[{"_time":"2016-09-01T00:00:00.000+00:00","now":"1473802228"}], "highlighted":{}}

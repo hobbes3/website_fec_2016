@@ -59,7 +59,8 @@
                     <div class="col-md-8 col-md-offset-2">
                         <h1 class="brand-heading">Clinton vs Trump</h1>
                         <p class="intro-text">2016 Presidential Election Influence</p>
-                        <p>Latest data: <span id="latest"></span> (updated <span id="updated"></span>)</p>
+                        <p>Latest filed expenditure: <span id="latest"></span></p>
+                        <p>(data updated <span id="updated"></span>)</p>
                         <a href="#about" class="btn btn-circle page-scroll">
                             <i class="fa fa-angle-double-down animated"></i>
                         </a>
@@ -75,7 +76,7 @@
                 <h2 class="text-center"><span id="total"></span> of independent expenditures spent (so far)</h2>
                 <p>Presidential elections in the United States are always contentious. A battle of ideas for arguably the most powerful position in the planet more than justifies it. But the influence of money in these elections has become a source of great frustration.</p>
                 <p>The disproportionate influence of independent expenditures has always been controversial, but until relatively recently those dollars were all reported – who and where the money came from, how the money was spent, which candidate benefited from that spending. But since the <a href="https://en.wikipedia.org/wiki/Citizens_United_v._FEC"><em>Citizens United v. Federal Elections Commission</em></a> decision in 2010, the rise of independent spending by so-called "<a href="https://en.wikipedia.org/wiki/Political_action_committee#Super_PACs">Super PACs</a>" in these elections – with no reporting on who or where the money comes from – has risen to historic levels. So, how much money is truly being spent by these Super PACs? And who is winning the "independent" campaign?</p>
-                <p>As a follow-up to the Splunk FEC Explorer App in the 2012 election, this 2016 Presidential Election Influence explorer focuses on the flow of soft money. Who is spending for and against Clinton? Who is spending for and against Trump?<!-- And most importantly, how much are they spending over time?--> And we get the data to you in using Splunk.</p>
+                <p>As a follow-up to the Splunk FEC Explorer App in the 2012 election, this 2016 Presidential Election Influence explorer focuses on the flow of soft money. Who is spending for and against Clinton? Who is spending for and against Trump?<!-- And most importantly, how much are they spending over time?--> And we get the data to you using Splunk.</p>
             </div>
         </div>
     </section>
@@ -98,7 +99,7 @@
         </div>
     </section>
     <svg id="viz_timecharts" class="center"></svg>
-    <section class="container content-section text-justify no-padding-top">
+    <section id="section_halo" class="container content-section text-justify no-padding-top">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <p>But how is the money flowing in the race? Who is spending for and against each candidate? A bigger picture can be created by looking at the top spending committees (mostly Super PACs) supporting and opposing the presidential candidates in the chart below. The top 5 most-spending committees are shown per candidate per action (supporting or opposing).</p>
@@ -138,7 +139,7 @@
                 <p class="small text-center">by Satoshi Kawasaki</p>
                 <p>We used the <a href="https://beta.fec.gov/data/">OpenFEC site</a> to figure out Clinton and Trump's candidate ID as <code>P00003392</code> and <code>P80001571</code>, respectively.</p>
                 <p>The API endpoint for independent expenditures is called <a href="https://api.open.fec.gov/developers/#!/independent_expenditures">Schedule E</a>. An example endpoint is</p>
-                <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?last_index=0&per_page=100&api_key=DEMO_KEY&candidate_id=P00003392">https://api.open.fec.gov/v1/schedules/schedule_e/?last_index=0&per_page=100&api_key=DEMO_KEY&candidate_id=P00003392</a>.</p>
+                <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392">https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392</a>.</p>
                 <p>Each response returns a value called <code>last_index</code> that is needed to paginate through the full result set. So to get all the results, we wrote a Python script on the Splunk server (different from this web server) to store and keep track of <code>last_index</code> and write the response to a file. The script also runs every hour to update the file and add new entries.</p>
                 <p>Each response has up to 100 independent expenditure transactions, and we wanted each transaction to be its own individual event in Splunk. Using trial-and-error, we created <code>props.conf</code> and <code>transforms.conf</code> for Splunk to be the following:</p>
 <pre># props.conf
@@ -146,7 +147,7 @@
 LINE_BREAKER = (\[|,|\R){
 TRUNCATE = 5000
 SHOULD_LINEMERGE = false
-TIME_PREFIX = "expenditure_date":"|"receipt_date":"(?=.+?,"expenditure_date":null)
+TIME_PREFIX = "expenditure_date":"|"receipt_date":"
 TIME_FORMAT = %F
 MAX_TIMESTAMP_LOOKAHEAD = 10
 MAX_DAYS_AGO = 10951
@@ -188,12 +189,12 @@ FORMAT = nullQueue</pre>
 | fillnull
 </pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a></p>
-<pre>index=fec sourcetype=fec_schedule_e committee_id=*
+<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | head 1
 | table _time
 | eval now=now()</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_latest.json">schedule_e_latest.json</a></p>
-                <p>Because we can't control the JSON response format of the OpenFEC API response, we added <code>committee_id=*</code> to potentially filter out any invalid JSON events in Splunk. In the past when the response format changed, we would get a few "stray" events that the regular expression in <code>props.conf</code> didn't catch.</p>
+                <!--<p>Because we can't control the JSON response format of the OpenFEC API response, we added <code>committee_id=*</code> to potentially filter out any invalid JSON events in Splunk. In the past when the response format changed, we would get a few "stray" events that the regular expression in <code>props.conf</code> didn't catch.</p>-->
                 <p>The Python script also calls the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post API</a> for the 2016 Presidential Election poll results which is saved as <a href="/data/polls.json">polls.json</a>. The idea is to correlate poll results with Schedule E spending over time as shown in the first chart.</p>
                 <p>With the data available, we developed a custom visualization called "Halo" in <a href="https://d3js.org/">d3.js</a> v4 that represents two sets of pie charts with a visual relationship between the two sets. The Halo visualization uses the following d3 libraries to compute the pie charts layout:</p>
                 <ul>
@@ -237,6 +238,10 @@ FORMAT = nullQueue</pre>
                 "jquery_easing": {
                     "deps": ["jquery"],
                     "export": "jQuery.easing"
+                },
+                "jquery_waypoint": {
+                    "deps": ["jquery"],
+                    "export": "jQuery.waypoint"
                 }
             },
             paths: {
@@ -244,6 +249,7 @@ FORMAT = nullQueue</pre>
                 "underscore": "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min",
                 "jquery": "//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min",
                 "jquery_easing": "//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min",
+                "jquery_waypoint": "//cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min",
                 "bootstrap": "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min",
                 "moment": "//cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min"
             }

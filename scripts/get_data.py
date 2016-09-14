@@ -25,7 +25,8 @@ kwargs_oneshot = {
 }
 
 stats_query = """
-search index=fec sourcetype=fec_schedule_e candidate=trump OR candidate=clinton
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
+| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
 | stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | sort 0 -spent
@@ -47,7 +48,8 @@ f = open("/data/www/data/schedule_e_stats.json", "w")
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e candidate=trump OR candidate=clinton
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
+| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | eval id=candidate."_".toward
 | timechart span=1w sum(expenditure_amount) by id
@@ -65,7 +67,7 @@ f = open("/data/www/data/schedule_e_timechart.json", "w")
 print(timechart_result, file=f)
 
 latest_query = """
-search index=fec sourcetype=fec_schedule_e committee_id=*
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | head 1
 | table _time
 | eval now=now()
@@ -84,7 +86,8 @@ print(latest_result, file=f)
 kwargs_oneshot["earliest_time"] = 0
 
 stats_by_committee_type_query = """
-search index=fec sourcetype=fec_schedule_e
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
+| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
 | rename "committee.committee_type_full" as ct
 | eval committee_type=if(match(ct, "Super|Party - Qualified|PAC -|PAC.+Nonqualified"), ct, "OTHER")
 | stats sum(expenditure_amount) as spent by committee_type candidate date_year

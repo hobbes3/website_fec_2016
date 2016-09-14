@@ -6,7 +6,8 @@ require([
     "js/helper",
     "js/timecharts",
     "js/halo",
-    "js/pies"
+    "js/pies",
+    "jquery_waypoint"
 ],
 function(
     $,
@@ -187,5 +188,17 @@ function(
         timecharts(data);
         pies(data);
         halo(data);
+
+        var halo_animated = false;
+
+        $("#section_halo").waypoint({
+            handler: function() {
+                if(!halo_animated) {
+                    $("#toward_controls > .active").next("label").find("input").trigger("click");
+                }
+
+                halo_animated = true;
+            }
+        })
     }
 });

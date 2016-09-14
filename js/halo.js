@@ -30,8 +30,7 @@ function(
             label_wrap_length = radius * 0.7, // wrap to under in px
             label_relax_delta = 0.5, // increment in px to separate colliding labels per label_relax() execution
             label_relax_sleep = 10, // sleep label_relax() in ms
-            transition_duration = 750, // in ms
-            t = d3.transition().duration(transition_duration);
+            transition_duration = 750; // in ms
 
         var color_outer = d3.scaleOrdinal(d3.schemeCategory20b);
 
@@ -676,7 +675,8 @@ function(
             animation = true;
 
             path_outer.data(pie_outer(data.outer))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("d", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -687,7 +687,8 @@ function(
 
             label_group
                 .attr("visibility", "visible")
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .style("opacity", function(d) {
                         return d.data.toward === toward_option || toward_option === "both" ? 1.0 : 0.0;
                     })
@@ -698,7 +699,8 @@ function(
                     });
 
             label_circle.data(pie_outer(data.outer))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("transform", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -708,7 +710,8 @@ function(
                     });
 
             label_line.data(pie_outer(data.outer))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("x1", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -743,7 +746,8 @@ function(
                     });
 
             label_text_g.data(pie_outer(data.outer))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("transform", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -768,7 +772,8 @@ function(
             }
 
             label_text.data(pie_outer(data.outer))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("text-anchor", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -799,7 +804,8 @@ function(
                 });
 
             node_inner_g.data(bubble_inner(root).children)
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attr("transform", function(d) {
                         return "translate(" + [d.x, d.y] + ")"
                     });
@@ -811,7 +817,8 @@ function(
                         return m;
                     })
                 })
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("d", function(d) {
                         d.innerRadius = d.r - thickness;
                         d.outerRadius = d.r;
@@ -823,7 +830,8 @@ function(
                     });
 
             link.data(link_data(data))
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attrTween("d", function(d) {
                         var i = d3.interpolate(this._current, d);
                         this._current = i(0);
@@ -833,7 +841,8 @@ function(
                     });
 
             image.data(bubble_inner(root).children)
-                .transition(t)
+                .transition()
+                .duration(transition_duration)
                     .attr("x", function(d) {
                         return thickness - d.r;
                     })

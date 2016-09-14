@@ -30,12 +30,12 @@ function(
             {
                 "data": [
                     {
-                        "name": "Expenditure spent supporting a candidate",
+                        "name": "Supporting expenditure $",
                         "type": "shape",
                         "color": green
                     },
                     {
-                        "name": "Expenditure spent opposing a candidate",
+                        "name": "Opposing expenditure $",
                         "type": "shape",
                         "color": red
                     }
@@ -96,7 +96,7 @@ function(
             .append("g")
                 .attr("class", "sub")
                 .attr("transform", function(d, i) {
-                    return "translate(" + [width / legend_data.length * i + width * 0.3, height * 0.05] + ")";
+                    return "translate(" + [width / legend_data.length * i + width * 0.4, height * 0.05] + ")";
                 });
 
         var legend_label_g = legend_sub.selectAll("g.legend_label")

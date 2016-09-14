@@ -505,7 +505,7 @@ function(
 
                     timeline_event
                         .transition()
-                        .style("opacity", 0.4);
+                        .style("opacity", 0.2);
                 })
                 .on("mouseout", function() {
                     d3.selectAll(".hover")
@@ -515,7 +515,7 @@ function(
                         .transition()
                         .style("opacity", 1.0);
 
-                    x_axis.selectAll(".election_day")
+                    svg.selectAll(".election_day")
                         .transition()
                         .style("opacity", 1.0);
 
