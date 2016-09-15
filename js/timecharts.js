@@ -145,13 +145,19 @@ function(
                     return "/images/" + d.candidate + "_strip.jpg";
                 })
                 .on("mouseover", function(d) {
+                    var html = d.candidate.capitalize() + "<br><i>Click for more details</i>";
                     helper.tooltip
                         .style("visibility", "visible")
-                        .text(d.candidate.capitalize());
+                        .html(html);
                 })
                 .on("mousemove", helper.tooltip_position)
                 .on("mouseout", function(d) {
                     helper.tooltip.style("visibility", "hidden");
+                })
+                .on("click", function(d) {
+                    var candidate_id = d.candidate_id;
+
+                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id, "_blank");
                 });
 
         var x = d3.scaleTime()
@@ -427,7 +433,7 @@ function(
                 return _(d.data[0]).chain()
                     .keys()
                     .reject(function(v) {
-                        return v === "candidate" || v === "date";
+                        return v === "candidate" || v === "date" || v === "candidate_id";
                     })
                     .reverse()
                     .value();

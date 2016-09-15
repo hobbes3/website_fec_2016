@@ -162,13 +162,19 @@ function(
                     return "/images/" + d.candidate + "_head.png";
                 })
                 .on("mouseover", function(d) {
+                    var html = d.candidate.capitalize() + "<br><i>Click for more details</i>";
                     helper.tooltip
                         .style("visibility", "visible")
-                        .text(d.candidate.capitalize());
+                        .html(html);
                 })
                 .on("mousemove", helper.tooltip_position)
                 .on("mouseout", function(d) {
                     helper.tooltip.style("visibility", "hidden");
+                })
+                .on("click", function(d) {
+                    var candidate_id = d.candidate_id;
+
+                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id, "_blank");
                 });
 
         var arc_path = pie_data

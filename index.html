@@ -103,20 +103,12 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <p>But how is the money flowing in the race? Who is spending for and against each candidate? A bigger picture can be created by looking at the top spending committees (mostly Super PACs) supporting and opposing the presidential candidates in the chart below. The top 5 most-spending committees are shown per candidate per action (supporting or opposing).</p>
-                <p class="small text-center">Select from the buttons below to filter between supporting and opposing causes. Committee names in italics aren't Super PACs.</p>
-                <div class="text-center">
-                    <div id="toward_controls" class="btn-group" data-toggle="buttons">
-                        <label class="btn btn-primary active">
-                            <input type="radio" name="toward" value="both" autocomplete="off" checked> Show both
-                        </label>
-                        <label class="btn btn-primary">
-                            <input type="radio" name="toward" value="supporting" autocomplete="off"> Show only supporting
-                        </label>
-                        <label class="btn btn-primary">
-                            <input type="radio" name="toward" value="opposing" autocomplete="off"> Show only opposing
-                        </label>
-                    </div>
-                </div>
+                <p class="small text-center">Select from the input below to filter between supporting and opposing causes. Committee names in italics aren't Super PACs.</p>
+                <select id="toward_controls" class="center form-control input-lg">
+                    <option value="both">Show both supporting and opposing expenditures</option>
+                    <option value="supporting">Show supporting expenditures only</option>
+                    <option value="opposing">Show opposing expenditures only</option>
+                </select>
             </div>
         </div>
     </section>
@@ -173,21 +165,20 @@ FORMAT = nullQueue</pre>
                 <p>The next challenge is performance and stability on serving the Splunk data to the public. We don't want the site visitors to overload the Splunk server by running searches to retrieve the FEC results on every page visit. Also since the Schedule E data only updates every day or so, we needed a way to <i>cache</i> the results. Fortunately Nginx can easily cache files, therefore we wrote another Python script that uses the <a href="http://dev.splunk.com/python">Splunk Python SDK</a> to run various searches against the Splunk server and save the results as a file on the web server. The script runs every day. The following are Splunk searches that the script runs and its current result:</p>
                 <p class="small text-center">All searches are from May 1st, 2015 to now</p>
 <pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
+| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate candidate_id
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | sort 0 -spent
 | streamstats count as rank by toward candidate
-| eval id=if(rank&lt;=5, 'committee.name', "others ".toward." ".candidate)
+| eval committee_id=if(rank&lt;=5, committee_id, "none")
+| eval committee.name=if(rank&lt;=5, 'committee.name', "others ".toward." ".candidate)
 | eval committee.committee_type_full=if(rank&lt;=5, 'committee.committee_type_full', "none")
-| stats sum(spent) as spent by id committee.committee_type_full toward candidate
-| rename id as committee.name</pre>
+| stats sum(spent) as spent by committee_id committee.name committee.committee_type_full toward candidate candidate_id</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_stats.json">schedule_e_stats.json</a></p>
 <pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
-| eval id=candidate."_".toward
+| eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
-| fillnull
-</pre>
+| fillnull</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a></p>
 <pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | head 1

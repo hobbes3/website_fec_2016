@@ -16,7 +16,7 @@ function(
             green = data.green,
             red = data.red,
             width = Math.min($("#viz_halo").parent().innerWidth(), 1500),
-            height = width * 0.7,
+            height = width * 0.8,
             radius = width / 2 * 0.55,
             radius_label = radius * 1.1, // default radius for label before label_relax()
             thickness = radius * 0.07,
@@ -86,6 +86,7 @@ function(
 
                     var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
                         committee_type = d.data["committee.committee_type_full"],
+                        committee_id = d.data.committee_id;
                         toward = d.data.toward,
                         candidate = d.data.candidate,
                         name = candidate.capitalize(),
@@ -97,13 +98,13 @@ function(
 
                     var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
 
-                    if(committee_type !== "none") {
-                        html += "<br>Type: " + committee_type;
-                    }
+                    html += committee_type === "none" ? "" : "<br>Type: " + committee_type;
 
                     html += toward_option === "both" ?
                         "<br>" + helper.pct_label(pct) + " of total expenditures" :
                         "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
+
+                    html += committee_id === "none" ? "" : "<br><i>Click for more details</i>";
 
                     helper.tooltip
                         .style("visibility", "visible")
@@ -134,7 +135,14 @@ function(
                         });
                 })
                 .on("mousemove", helper.tooltip_position)
-                .on("mouseout", mouseout_default);
+                .on("mouseout", mouseout_default)
+                .on("click", function(d) {
+                    var committee_id = d.data.committee_id;
+
+                    if(committee_id !== "none") {
+                        window.open("https://beta.fec.gov/data/committee/" + committee_id, "_blank");
+                    }
+                });
 
         var path_outer = path_outer_g
             .append("path")
@@ -416,6 +424,8 @@ function(
                             helper.pct_label(pct_toward) + " of total expenditures " + toward_option + " a candidate";
                     }
 
+                    html += "<br><i>Click for more details</i>";
+
                     helper.tooltip
                         .style("visibility", "visible")
                         .html(html);
@@ -445,7 +455,12 @@ function(
                         });
                 })
                 .on("mousemove", helper.tooltip_position)
-                .on("mouseout", mouseout_default);
+                .on("mouseout", mouseout_default)
+                .on("click", function(d) {
+                    var candidate_id = d.data.data[0].candidate_id;
+
+                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id, "_blank");
+                });
 
         var arc_inner = d3.arc();
 
@@ -658,7 +673,7 @@ function(
                     this._current = d;
                 });
 
-        $("#toward_controls input[name=toward]").on("change", function() {
+        $("#toward_controls").on("change", function() {
             helper.tooltip.style("visibility", "hidden");
             path_outer_g.style("opacity", 1.0);
             link.style("opacity", opacity_link);

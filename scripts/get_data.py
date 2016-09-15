@@ -27,14 +27,14 @@ kwargs_oneshot = {
 stats_query = """
 search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
-| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate
+| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate candidate_id
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
 | sort 0 -spent
 | streamstats count as rank by toward candidate
-| eval id=if(rank<=5, 'committee.name', "others ".toward." ".candidate)
+| eval committee_id=if(rank<=5, committee_id, "none")
+| eval committee.name=if(rank<=5, 'committee.name', "others ".toward." ".candidate)
 | eval committee.committee_type_full=if(rank<=5, 'committee.committee_type_full', "none")
-| stats sum(spent) as spent by id committee.committee_type_full toward candidate
-| rename id as committee.name
+| stats sum(spent) as spent by committee_id committee.name committee.committee_type_full toward candidate candidate_id
 """
 
 print("Running stats_query...")
@@ -51,7 +51,7 @@ timechart_query = """
 search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
 | dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
 | eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
-| eval id=candidate."_".toward
+| eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
 | fillnull
 """

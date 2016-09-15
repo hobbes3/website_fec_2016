@@ -73,6 +73,7 @@ function(
                     .map(function(v, k) {
                         return {
                             "candidate": k,
+                            "candidate_id": v[0].candidate_id,
                             "total": _(v).total("spent"),
                             "toward": by_toward(v, k)
                         };
@@ -113,13 +114,14 @@ function(
                     return kk.charAt(0) !== "_";
                 })
                 .map(function(vv, kk) {
-                    var matches = /^([^_]+)_(.+)$/.exec(kk);
+                    var matches = /^([^_]+)_([^_]+)_(.+)$/.exec(kk);
 
                     var obj = {
-                        "candidate": matches[1]
+                        "candidate": matches[1],
+                        "candidate_id": matches[2]
                     };
 
-                    obj[matches[2]] = parseFloat(vv);
+                    obj[matches[3]] = parseFloat(vv);
 
                     return obj;
                 })
@@ -143,6 +145,7 @@ function(
                     else {
                         data.timechart.push({
                             "candidate": kk,
+                            "candidate_id": obj.candidate_id,
                             "data": [obj]
                         });
                     }
@@ -194,7 +197,8 @@ function(
         $("#section_halo").waypoint({
             handler: function() {
                 if(!halo_animated) {
-                    $("#toward_controls > .active").next("label").find("input").trigger("click");
+                    //var select = $("#toward_controls option:selected");
+                    $("#toward_controls option:eq(1)").prop("selected", true).change();
                 }
 
                 halo_animated = true;

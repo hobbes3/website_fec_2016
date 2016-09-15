@@ -97,6 +97,10 @@ text {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
+#toward_controls {
+    width: auto;
+}
+
 #viz_halo .label-text {
     alignment-baseline: middle;
     text-transform: uppercase;
