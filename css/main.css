@@ -97,8 +97,31 @@ text {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 
+.form-group label {
+    float: left;
+    text-align: left;
+    font-weight: normal;
+    font-size: 20px;
+}
+
+.form-group select {
+    display: inline-block;
+    width: auto;
+    vertical-align: middle;
+}
+
 #toward_controls {
     width: auto;
+}
+
+svg image, #viz_halo .arc_outer {
+    cursor: pointer;
+    cursor: hand;
+}
+
+#viz_timecharts .line {
+    fill: none;
+    stroke-width: 3px;
 }
 
 #viz_halo .label-text {
@@ -120,12 +143,7 @@ text {
     stroke-width: 1.5px;
 }
 
-#viz_halo path,#viz_pies path {
+#viz_pies path, #viz_halo path {
     stroke: #363636;
     stroke-width: 1px;
-}
-
-#viz_timecharts .line {
-    fill: none;
-    stroke-width: 3px;
 }

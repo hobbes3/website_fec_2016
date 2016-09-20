@@ -24,6 +24,8 @@ function(
         "red": "#d62728"
     };
 
+    var present = location.search.indexOf("present=t") > -1 ? true : false;
+
     d3.queue()
         .defer(d3.json, "/data/schedule_e_latest.json")
         .defer(d3.json, "/data/schedule_e_stats.json")
@@ -192,17 +194,30 @@ function(
         pies(data);
         halo(data);
 
+        function toward_controls_choose_next() {
+            var n = $("#toward_controls option").length,
+                i = $("#toward_controls option:selected").index(),
+                x = i + 1 >= n ? 0 : i + 1;
+
+            $("#toward_controls option:eq(" + x + ")").prop("selected", true).change();
+        }
+
         var halo_animated = false;
 
         $("#section_halo").waypoint({
             handler: function() {
-                if(!halo_animated) {
-                    //var select = $("#toward_controls option:selected");
-                    $("#toward_controls option:eq(1)").prop("selected", true).change();
+                if(!halo_animated && !present) {
+                    toward_controls_choose_next();
                 }
 
                 halo_animated = true;
             }
         })
+
+        if(present) {
+            setInterval(toward_controls_choose_next, 5000);
+
+            $("#toward_controls").before("<h2>Visit splunk.com/elections for the full page!</h2>");
+        }
     }
 });

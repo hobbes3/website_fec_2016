@@ -25,10 +25,9 @@ kwargs_oneshot = {
 }
 
 stats_query = """
-search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
-| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate candidate_id
-| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
+| dedup _time committee_id expenditure_amount toward candidate_id
+| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name toward candidate candidate_id
 | sort 0 -spent
 | streamstats count as rank by toward candidate
 | eval committee_id=if(rank<=5, committee_id, "none")
@@ -48,9 +47,8 @@ f = open("/data/www/data/schedule_e_stats.json", "w")
 print(stats_result, file=f)
 
 timechart_query = """
-search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
-| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
+| dedup _time committee_id expenditure_amount toward candidate_id
 | eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
 | fillnull
@@ -67,7 +65,7 @@ f = open("/data/www/data/schedule_e_timechart.json", "w")
 print(timechart_result, file=f)
 
 latest_query = """
-search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
 | head 1
 | table _time
 | eval now=now()
@@ -86,8 +84,8 @@ print(latest_result, file=f)
 kwargs_oneshot["earliest_time"] = 0
 
 stats_by_committee_type_query = """
-search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| dedup _time committee_id expenditure_amount support_oppose_indicator candidate_id
+search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
+| dedup _time committee_id expenditure_amount toward candidate_id
 | rename "committee.committee_type_full" as ct
 | eval committee_type=if(match(ct, "Super|Party - Qualified|PAC -|PAC.+Nonqualified"), ct, "OTHER")
 | stats sum(expenditure_amount) as spent by committee_type candidate date_year

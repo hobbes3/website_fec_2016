@@ -103,12 +103,16 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <p>But how is the money flowing in the race? Who is spending for and against each candidate? A bigger picture can be created by looking at the top spending committees (mostly Super PACs) supporting and opposing the presidential candidates in the chart below. The top 5 most-spending committees are shown per candidate per action (supporting or opposing).</p>
-                <p class="small text-center">Select from the input below to filter between supporting and opposing causes. Committee names in italics aren't Super PACs.</p>
-                <select id="toward_controls" class="center form-control input-lg">
-                    <option value="both">Show both supporting and opposing expenditures</option>
-                    <option value="supporting">Show supporting expenditures only</option>
-                    <option value="opposing">Show opposing expenditures only</option>
-                </select>
+                <p class="small text-center">Select from the dropdown below to filter between supporting and opposing expenditures. Committee names in italics aren't Super PACs.</p>
+                <div class="form-group">
+                    <label>Choose expenditure types:
+                        <select id="toward_controls" class="center form-control input-lg">
+                            <option value="both">Show both supporting and opposing expenditures</option>
+                            <option value="supporting">Show supporting expenditures only</option>
+                            <option value="opposing">Show opposing expenditures only</option>
+                        </select>
+                    </label>
+                </div>
             </div>
         </div>
     </section>
@@ -139,20 +143,40 @@
 LINE_BREAKER = (\[|,|\R){
 TRUNCATE = 5000
 SHOULD_LINEMERGE = false
-TIME_PREFIX = "expenditure_date":"|"receipt_date":"
+TIME_PREFIX = "expenditure_date":"|"receipt_date":"(?=.+?,"expenditure_date":null)
 TIME_FORMAT = %F
 MAX_TIMESTAMP_LOOKAHEAD = 10
 MAX_DAYS_AGO = 10951
 TRANSFORMS-0 = fec_schedule_e_drop_events
 SEDCMD-0 = s/"}],".+$/"}/
 
-EXTRACT-0 = (?&lt;candidate&gt;\w+)_schedule in source
-KV_MODE = json</pre>
+KV_MODE = json
+LOOKUP-0 = candidates candidate_id
+LOOKUP-1 = support_oppose_indicator support_oppose_indicator</pre>
 <pre># transforms.conf
 [fec_schedule_e_drop_events]
 REGEX = [^}]$
 DEST_KEY = queue
-FORMAT = nullQueue</pre>
+FORMAT = nullQueue
+
+[candidates]
+filename = candidates.csv
+
+[support_oppose_indicator]
+filename = support_oppose_indicator.csv</pre>
+                <p>Finally a simple <code>candidates.csv</code> and <code>support_oppose_indicator.csv</code>, which is referenced in the conf files above, for mapping the candidate IDs to their names and the support/oppose flag, respectively:</p>
+<pre>candidate_id,candidate
+P00003392,clinton
+P80001571,trump
+P80003338,obama
+P80003353,romney
+P80002801,mccain
+P00003335,bush
+P80000235,kerry
+P80000912,gore</pre>
+<pre>support_oppose_indicator,toward
+S,supporting
+O,opposing</pre>
                 <p>With these settings, we let Splunk monitor the file created by the Python script. Whenever the script updates new transactions to the file, Splunk will automatically ingest it. In Splunk we receive one event as one transaction in valid JSON and the time of the event is set to <code>expenditure_date</code> (or <code>receipt_date</code> if the former is null). Since the events are in JSON, Splunk automatically parses the data as well:</p>
                 <div class="center text-center" style="width: 500px">
                     <a href="#" class="img-pop">
@@ -164,9 +188,8 @@ FORMAT = nullQueue</pre>
 <pre>{"candidate_office":"P","office_total_ytd":773609.49,"notary_sign_date":null,"dissemination_date":"2016-08-19","candidate":{"candidate_id":"P80001571","two_year_period":2016.0,"idx":71849},"pdf_url":"http:\/\/docquery.fec.gov\/cgi-bin\/fecimg\/?201608199022591132","payee_middle_name":null,"candidate_prefix":null,"payee_last_name":null,"report_type":"48","load_date":"2016-08-19T23:26:19+00:00","record_number":null,"receipt_date":"2016-08-19","notary_sign_name":null,"independent_sign_name":"SCHIFELING, DEIRDRE","filing_form":"F24","expenditure_date":"2016-08-19","election_type":"G2016","line_number":"24","candidate_middle_name":null,"filer_middle_name":null,"category_code":"004","candidate_suffix":null,"payee_zip":"94104","tran_id":"B623462","payee_state":"CA","file_number":1095966,"committee":{"state_full":null,"committee_type_full":"Super PAC (Independent Expenditure-Only)","organization_type_full":null,"expire_date":"2016-03-19T00:37:18+00:00","zip":"10038","street_2":null,"cycles":[2016,2010,2014,2012],"treasurer_name":"GUSTAFSON, LIZ","city":"NEW YORK","cycle":2016,"party":null,"party_full":null,"designation_full":"Unauthorized","name":"PLANNED PARENTHOOD VOTES","committee_id":"C00489799","street_1":"123 WILLIAM ST, 10TH FLOOR","committee_type":"O","state":"NY","designation":"U","organization_type":null,"candidate_ids":[]},"election_type_full":null,"notary_commission_expiration_date":null,"payee_prefix":null,"is_notice":true,"image_number":"201608199022591132","sched_e_sk":312466902,"back_reference_schedule_name":null,"back_reference_transaction_id":null,"payee_first_name":null,"filer_suffix":null,"update_date":null,"filer_prefix":null,"committee_id":"C00489799","payee_city":"SAN FRANCISCO","link_id":4081920161313050011,"support_oppose_indicator":"O","filer_last_name":"SCHIFELING","payee_suffix":null,"candidate_id":"P80001571","payee_name":"TERRIS BARNES &amp; WALTERS","cand_office_state":"US","candidate_first_name":"DONALD","category_code_full":null,"expenditure_amount":1732.67,"payee_street_2":null,"expenditure_description":"CANVASS LIT-ESTIMATED COSTS","candidate_last_name":"TRUMP","report_primary_general":null,"filer_first_name":"DEIRDRE","cand_office_district":null,"committee_name":null,"payee_street_1":"400 MONTGOMERY ST # 700","report_year":2016,"independent_sign_date":"2016-08-19","candidate_name":"TRUMP, DONALD"}</pre>
                 <p>The next challenge is performance and stability on serving the Splunk data to the public. We don't want the site visitors to overload the Splunk server by running searches to retrieve the FEC results on every page visit. Also since the Schedule E data only updates every day or so, we needed a way to <i>cache</i> the results. Fortunately Nginx can easily cache files, therefore we wrote another Python script that uses the <a href="http://dev.splunk.com/python">Splunk Python SDK</a> to run various searches against the Splunk server and save the results as a file on the web server. The script runs every day. The following are Splunk searches that the script runs and its current result:</p>
                 <p class="small text-center">All searches are from May 1st, 2015 to now</p>
-<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name support_oppose_indicator candidate candidate_id
-| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
+| stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name toward candidate candidate_id
 | sort 0 -spent
 | streamstats count as rank by toward candidate
 | eval committee_id=if(rank&lt;=5, committee_id, "none")
@@ -174,13 +197,12 @@ FORMAT = nullQueue</pre>
 | eval committee.committee_type_full=if(rank&lt;=5, 'committee.committee_type_full', "none")
 | stats sum(spent) as spent by committee_id committee.name committee.committee_type_full toward candidate candidate_id</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_stats.json">schedule_e_stats.json</a></p>
-<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
-| eval toward=if(support_oppose_indicator="O", "opposing", "supporting")
+<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
 | eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
 | fillnull</pre>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a></p>
-<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump
+<pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
 | head 1
 | table _time
 | eval now=now()</pre>
