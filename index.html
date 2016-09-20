@@ -196,16 +196,19 @@ O,opposing</pre>
 | eval committee.name=if(rank&lt;=5, 'committee.name', "others ".toward." ".candidate)
 | eval committee.committee_type_full=if(rank&lt;=5, 'committee.committee_type_full', "none")
 | stats sum(spent) as spent by committee_id committee.name committee.committee_type_full toward candidate candidate_id</pre>
+                <p><i>English translation:</i> Give me the total spending of the top 5 committee per candidate per action (supporting or opposting). Group the rest as "others supporting or opposing a candidate".</p>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_stats.json">schedule_e_stats.json</a></p>
 <pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
 | eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
 | fillnull</pre>
+                <p><i>English translation:</i> Give me the total spending supporting and opposing each candidate per week.</p>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_timechart.json">schedule_e_timechart.json</a></p>
 <pre>index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
 | head 1
 | table _time
 | eval now=now()</pre>
+                <p><i>English translation:</i> Give me the last spending transaction date (doesn't matter which candidate) and the current time.</p>
                 <p class="small text-center">Result for the above: <a href="/data/schedule_e_latest.json">schedule_e_latest.json</a></p>
                 <!--<p>Because we can't control the JSON response format of the OpenFEC API response, we added <code>committee_id=*</code> to potentially filter out any invalid JSON events in Splunk. In the past when the response format changed, we would get a few "stray" events that the regular expression in <code>props.conf</code> didn't catch.</p>-->
                 <p>The Python script also calls the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post API</a> for the 2016 Presidential Election poll results which is saved as <a href="/data/polls.json">polls.json</a>. The idea is to correlate poll results with Schedule E spending over time as shown in the first chart.</p>
