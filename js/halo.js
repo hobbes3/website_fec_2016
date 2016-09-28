@@ -373,6 +373,49 @@ function(
                     .value();
             });
 
+        var drag = d3.drag()
+            .on("start", function() {
+                animation = true;
+                helper.tooltip.style("visibility", "hidden");
+            })
+            .on("drag", function(d) {
+                var relative_x = d3.event.x - radius_pack,
+                    relative_y = radius_pack - d3.event.y,
+                    relative_r = Math.sqrt(Math.pow(relative_x, 2) + Math.pow(relative_y, 2)),
+                    limit_r = radius - 2 * thickness - d.r;
+
+                if(relative_r >= limit_r) {
+                    var theta = Math.atan2(relative_y, relative_x),
+                        new_relative_x = limit_r * Math.cos(theta),
+                        new_relative_y = limit_r * Math.sin(theta);
+
+                    d.x = new_relative_x + radius_pack;
+                    d.y = -new_relative_y + radius_pack;
+                }
+                else {
+                    d.x = d3.event.x;
+                    d.y = d3.event.y;
+                }
+
+                d3.select(this).attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")";
+                });
+
+                link
+                    .filter(function(dd) {
+                        return dd.data.candidate ===  d.data.candidate;
+                    })
+                    .each(function(dd) {
+                        dd.node_x = d.x;
+                        dd.node_y = d.y;
+
+                        d3.select(this).attr("d", link_d_path(dd));
+                    });
+            })
+            .on("end", function() {
+                animation = false;
+            });
+
         var node_inner_g = inner.selectAll("g.node_inner")
             .data(bubble_inner(root).children)
             .enter()
@@ -382,8 +425,8 @@ function(
                 })
                 .attr("transform", function(d) {
                     return "translate(" + [d.x, d.y] + ")";
-                });
-            //.call(drag);
+                })
+            .call(drag);
 
         var image = node_inner_g
             .append("image")
