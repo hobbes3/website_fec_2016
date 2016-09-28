@@ -215,9 +215,9 @@ function(
         })
 
         if(present) {
-            setInterval(toward_controls_choose_next, 5000);
+            setInterval(toward_controls_choose_next, 2000);
 
-            $("#toward_controls").before("<h2>Visit splunk.com/elections for the full page!</h2>");
+            //$("#toward_controls").before("<h2>Visit splunk.com/elections for the full page!</h2>");
         }
     }
 });
