@@ -410,6 +410,8 @@ function(
                         dd.node_y = d.y;
 
                         d3.select(this).attr("d", link_d_path(dd));
+
+                        this._current = dd;
                     });
             })
             .on("end", function() {
