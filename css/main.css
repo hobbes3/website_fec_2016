@@ -114,7 +114,7 @@ text {
     width: auto;
 }
 
-svg image, #viz_halo .arc_outer {
+svg image, #viz_halo .arc_outer, #viz_halo .front {
     cursor: pointer;
     cursor: hand;
 }

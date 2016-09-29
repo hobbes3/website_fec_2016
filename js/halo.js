@@ -44,6 +44,19 @@ function(
             .append("g")
                 .attr("class", "outer");
 
+        var middle = svg
+            .append("g")
+                .attr("class", "middle");
+
+        var inner = svg
+            .append("g")
+                .attr("class", "inner")
+                .attr("transform", "translate(" + [-radius_pack, -radius_pack] + ")");
+
+        var label = svg
+            .append("g")
+                .attr("class", "front");
+
         var arc_outer = d3.arc()
             .innerRadius(radius - thickness)
             .outerRadius(radius);
@@ -76,64 +89,66 @@ function(
                 .style("opacity", 1.0);
         }
 
+        function mouseover_committee(d) {
+            if(animation) return;
+
+            var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
+                committee_type = d.data["committee.committee_type_full"],
+                committee_id = d.data.committee_id;
+                toward = d.data.toward,
+                candidate = d.data.candidate,
+                name = candidate.capitalize(),
+                spent = d.data.spent,
+                total = data.stats.total,
+                total_toward = _(data.stats.toward).findWhere({"toward": toward}).total,
+                pct = spent / total * 100,
+                pct_toward = spent / total_toward * 100;
+
+            var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
+
+            html += committee_type === "none" ? "" : "<br>Type: " + committee_type;
+
+            html += toward_option === "both" ?
+                "<br>" + helper.pct_label(pct) + " of total expenditures" :
+                "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
+
+            html += committee_id === "none" ? "" : "<br><i>Click for more details</i>";
+
+            helper.tooltip
+                .style("visibility", "visible")
+                .html(html);
+
+            path_outer_g
+                .transition()
+                .style("opacity", function(dd) {
+                    return d.data._index === dd.data._index ? 1.0 : opacity_fade;
+                });
+
+            link
+                .transition()
+                .style("opacity", function(dd) {
+                    return d.data._index === dd.data._index ? opacity_link : opacity_fade;
+                });
+
+            path_inner_g
+                .transition()
+                .style("opacity", function(dd) {
+                    return d.data._index === dd.data._index ? 1.0 : opacity_fade;
+                });
+
+            image
+                .transition()
+                .style("opacity", function(dd) {
+                    return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
+                });
+        }
+
         var path_outer_g = outer.selectAll("g.arc_outer")
             .data(pie_outer(data.outer))
             .enter()
             .append("g")
                 .attr("class", "arc_outer")
-                .on("mouseover", function(d) {
-                    if(animation) return;
-
-                    var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
-                        committee_type = d.data["committee.committee_type_full"],
-                        committee_id = d.data.committee_id;
-                        toward = d.data.toward,
-                        candidate = d.data.candidate,
-                        name = candidate.capitalize(),
-                        spent = d.data.spent,
-                        total = data.stats.total,
-                        total_toward = _(data.stats.toward).findWhere({"toward": toward}).total,
-                        pct = spent / total * 100,
-                        pct_toward = spent / total_toward * 100;
-
-                    var html = committee + " spent $" + helper.dollar_format(spent) + " " + toward + " " + name;
-
-                    html += committee_type === "none" ? "" : "<br>Type: " + committee_type;
-
-                    html += toward_option === "both" ?
-                        "<br>" + helper.pct_label(pct) + " of total expenditures" :
-                        "<br>" + helper.pct_label(pct_toward) + " of total expenditures " + toward + " a candidate";
-
-                    html += committee_id === "none" ? "" : "<br><i>Click for more details</i>";
-
-                    helper.tooltip
-                        .style("visibility", "visible")
-                        .html(html);
-
-                    path_outer_g
-                        .transition()
-                        .style("opacity", function(dd) {
-                            return d.data._index === dd.data._index ? 1.0 : opacity_fade;
-                        });
-
-                    link
-                        .transition()
-                        .style("opacity", function(dd) {
-                            return d.data._index === dd.data._index ? opacity_link : opacity_fade;
-                        });
-
-                    path_inner_g
-                        .transition()
-                        .style("opacity", function(dd) {
-                            return d.data._index === dd.data._index ? 1.0 : opacity_fade;
-                        });
-
-                    image
-                        .transition()
-                        .style("opacity", function(dd) {
-                            return d.data.candidate === dd.data.candidate ? 1.0 : opacity_fade;
-                        });
-                })
+                .on("mouseover", mouseover_committee)
                 .on("mousemove", helper.tooltip_position)
                 .on("mouseout", mouseout_default)
                 .on("click", function(d) {
@@ -154,10 +169,22 @@ function(
                     this._current = d;
                 });
 
-        var label_group = outer.selectAll("g.arc_outer")
+        var label_group = label.selectAll("g.label-group")
+            .data(pie_outer(data.outer))
+            .enter()
             .append("g")
                 .attr("class", "label-group")
-                .attr("visibility", "visible");
+                .attr("visibility", "visible")
+                .on("mouseover", mouseover_committee)
+                .on("mousemove", helper.tooltip_position)
+                .on("mouseout", mouseout_default)
+                .on("click", function(d) {
+                    var committee_id = d.data.committee_id;
+
+                    if(committee_id !== "none") {
+                        window.open("https://beta.fec.gov/data/committee/" + committee_id, "_blank");
+                    }
+                });
 
         var label_circle = label_group
             .append("circle")
@@ -346,15 +373,6 @@ function(
                 setTimeout(label_relax, label_relax_sleep)
             }
         }
-
-        var middle = svg
-            .append("g")
-                .attr("class", "middle");
-
-        var inner = svg
-            .append("g")
-                .attr("class", "inner")
-                .attr("transform", "translate(" + [-radius_pack, -radius_pack] + ")");
 
         var bubble_inner = d3.pack()
             .size([2 * radius_pack, 2 * radius_pack])
