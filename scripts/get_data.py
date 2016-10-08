@@ -24,9 +24,10 @@ kwargs_oneshot = {
     "output_mode": "json"
 }
 
+#| dedup _time committee_id expenditure_amount toward candidate_id
+
 stats_query = """
 search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
-| dedup _time committee_id expenditure_amount toward candidate_id
 | stats sum(expenditure_amount) as spent by committee_id committee.committee_type_full committee.name toward candidate candidate_id
 | sort 0 -spent
 | streamstats count as rank by toward candidate
@@ -48,7 +49,6 @@ print(stats_result, file=f)
 
 timechart_query = """
 search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
-| dedup _time committee_id expenditure_amount toward candidate_id
 | eval id=candidate."_".candidate_id."_".toward
 | timechart span=1w sum(expenditure_amount) by id
 | fillnull
@@ -85,7 +85,6 @@ kwargs_oneshot["earliest_time"] = 0
 
 stats_by_committee_type_query = """
 search index=fec sourcetype=fec_schedule_e candidate=clinton OR candidate=trump toward=supporting OR toward=opposing
-| dedup _time committee_id expenditure_amount toward candidate_id
 | rename "committee.committee_type_full" as ct
 | eval committee_type=if(match(ct, "Super|Party - Qualified|PAC -|PAC.+Nonqualified"), ct, "OTHER")
 | stats sum(expenditure_amount) as spent by committee_type candidate date_year

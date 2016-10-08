@@ -134,8 +134,8 @@
                 <h2 class="text-center">The technical discussion</h2>
                 <p class="small text-center">by Satoshi Kawasaki</p>
                 <p>We used the <a href="https://beta.fec.gov/data/">OpenFEC site</a> to figure out Clinton and Trump's candidate ID as <code>P00003392</code> and <code>P80001571</code>, respectively.</p>
-                <p>The API endpoint for independent expenditures is called <a href="https://api.open.fec.gov/developers/#!/independent_expenditures">Schedule E</a>. An example endpoint is</p>
-                <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392">https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392</a>.</p>
+                <p>The API endpoint for independent expenditures is called <a href="https://api.open.fec.gov/developers/#!/independent_expenditures">Schedule E</a>. An example endpoint is:</p>
+                <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392&is_notice=false&sort=expenditure_amount">https://api.open.fec.gov/v1/schedules/schedule_e/?<br/>per_page=100&api_key=DEMO_KEY&candidate_id=P00003392&<br/>is_notice=false&sort=expenditure_amount</a></p>
                 <p>Each response returns a value called <code>last_index</code> that is needed to paginate through the full result set. So to get all the results, we wrote a Python script on the Splunk server (different from this web server) to store and keep track of <code>last_index</code> and write the response to a file. The script also runs every hour to update the file and add new entries.</p>
                 <p>Each response has up to 100 independent expenditure transactions, and we wanted each transaction to be its own individual event in Splunk. Using trial-and-error, we created <code>props.conf</code> and <code>transforms.conf</code> for Splunk to be the following:</p>
 <pre># props.conf
@@ -143,7 +143,7 @@
 LINE_BREAKER = (\[|,|\R){
 TRUNCATE = 5000
 SHOULD_LINEMERGE = false
-TIME_PREFIX = "expenditure_date":"|"receipt_date":"(?=.+?,"expenditure_date":null)
+TIME_PREFIX = "expenditure_date":"|"dissemination_date":"
 TIME_FORMAT = %F
 MAX_TIMESTAMP_LOOKAHEAD = 10
 MAX_DAYS_AGO = 10951
