@@ -58,7 +58,7 @@
                 <div class="row">
                     <div class="col-md-8 col-md-offset-2">
                         <h1 class="brand-heading">Clinton vs Trump</h1>
-                        <p class="intro-text">2016 Presidential Election Influence</p>
+                        <p class="intro-text">Independent Expenditures from the 2016 Presidential Election</p>
                         <p>Latest filed expenditure: <span id="latest"></span></p>
                         <p>(data updated <span id="updated"></span>)</p>
                         <a href="#about" class="btn btn-circle page-scroll">
@@ -76,7 +76,7 @@
                 <h2 class="text-center"><span id="total"></span> of independent expenditures spent (so far)</h2>
                 <p>Presidential elections in the United States are always contentious. A battle of ideas for arguably the most powerful position in the planet more than justifies it. But the influence of money in these elections has become a source of great frustration.</p>
                 <p>The disproportionate influence of independent expenditures has always been controversial, but until relatively recently those dollars were all reported – who and where the money came from, how the money was spent, which candidate benefited from that spending. But since the <a href="https://en.wikipedia.org/wiki/Citizens_United_v._FEC"><em>Citizens United v. Federal Elections Commission</em></a> decision in 2010, the rise of independent spending by so-called "<a href="https://en.wikipedia.org/wiki/Political_action_committee#Super_PACs">Super PACs</a>" in these elections – with no reporting on who or where the money comes from – has risen to historic levels. So, how much money is truly being spent by these Super PACs? And who is winning the "independent" campaign?</p>
-                <p>As a follow-up to the Splunk FEC Explorer App in the 2012 election, this 2016 Presidential Election Influence explorer focuses on the flow of soft money. Who is spending for and against Clinton? Who is spending for and against Trump?<!-- And most importantly, how much are they spending over time?--> And we get the data to you using Splunk.</p>
+                <p>As a follow-up to the Splunk FEC Explorer App in the 2012 election, this 2016 Presidential Election Influence explorer focuses on the flow of soft money. Who is spending for and against Clinton? Who is spending for and against Trump? And most importantly, how much are they spending over time? And we get the data to you using Splunk.</p>
             </div>
         </div>
     </section>
@@ -86,6 +86,8 @@
             <div class="col-lg-8 col-lg-offset-2">
                 <h2 class="text-center">The wonderful data</h2>
                 <p>Overall, independent expenditures in 2016 have indicated an overwhelmingly negative race, and Super-PAC spending has comprised a significant amount of that spending. However, that is not necessarily the case for both candidates.</p>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2 padding-top">
                 <p class="small text-center">Hover over each chart for more details.</p>
             </div>
         </div>
@@ -98,11 +100,19 @@
             </div>
         </div>
     </section>
+    <section id="data" class="container content-section text-justify no-padding-top">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 padding-top">
+                <p class="small text-center">Hover over the chart and events for more details.</p>
+            </div>
+        </div>
     <svg id="viz_timecharts" class="center"></svg>
     <section id="section_halo" class="container content-section text-justify no-padding-top">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <p>But how is the money flowing in the race? Who is spending for and against each candidate? A bigger picture can be created by looking at the top spending committees (mostly Super PACs) supporting and opposing the presidential candidates in the chart below. The top 5 most-spending committees are shown per candidate per action (supporting or opposing).</p>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2 padding-top">
                 <p class="small text-center">Select from the dropdown below to filter between supporting and opposing expenditures. Committee names in italics aren't Super PACs.</p>
                 <div class="form-group">
                     <label>Choose expenditure types:

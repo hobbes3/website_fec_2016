@@ -15,7 +15,7 @@ function(
     return function(data) {
         var margin = {
                 "top": 110,
-                "right": 50,
+                "right": 150,
                 "bottom": 100,
                 "left": 50
             },
