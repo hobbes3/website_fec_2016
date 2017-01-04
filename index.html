@@ -73,7 +73,7 @@
     <section id="about" class="container content-section text-justify">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
-                <h2 class="text-center"><span id="total"></span> of independent expenditures spent (so far)</h2>
+                <h2 class="text-center"><span id="total"></span> of independent expenditures spent</h2>
                 <p>Presidential elections in the United States are always contentious. A battle of ideas for arguably the most powerful position in the planet more than justifies it. But the influence of money in these elections has become a source of great frustration.</p>
                 <p>The disproportionate influence of independent expenditures has always been controversial, but until relatively recently those dollars were all reported – who and where the money came from, how the money was spent, which candidate benefited from that spending. But since the <a href="https://en.wikipedia.org/wiki/Citizens_United_v._FEC"><em>Citizens United v. Federal Elections Commission</em></a> decision in 2010, the rise of independent spending by so-called "<a href="https://en.wikipedia.org/wiki/Political_action_committee#Super_PACs">Super PACs</a>" in these elections – with no reporting on who or where the money comes from – has risen to historic levels. So, how much money is truly being spent by these Super PACs? And who is winning the "independent" campaign?</p>
                 <p>As a follow-up to the Splunk FEC Explorer App in the 2012 election, this 2016 Presidential Election Influence explorer focuses on the flow of soft money. Who is spending for and against Clinton? Who is spending for and against Trump? And most importantly, how much are they spending over time? And we get the data to you using Splunk.</p>
@@ -153,7 +153,8 @@
 LINE_BREAKER = (\[|,|\R){
 TRUNCATE = 5000
 SHOULD_LINEMERGE = false
-TIME_PREFIX = "expenditure_date":"|"dissemination_date":"
+# Use expenditure_date or use dissemination_date only when expenditure_date is null
+TIME_PREFIX = expenditure_date":"|dissemination_date":"(?=.+?expenditure_date":null)|expenditure_date":null.+?dissemination_date":"
 TIME_FORMAT = %F
 MAX_TIMESTAMP_LOOKAHEAD = 10
 MAX_DAYS_AGO = 10951
