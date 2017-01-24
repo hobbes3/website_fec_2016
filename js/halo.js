@@ -674,7 +674,7 @@ function(
                 .on("mouseover", function(d) {
                     if(animation) return;
 
-                    var committee = d.data["committee.name"].match("^others (supporting|opposing) (trump|hillary)$") ? "Others" : d.data["committee.name"],
+                    var committee = d.data["committee.name"].match("^others (supporting|opposing) ") ? "Others" : d.data["committee.name"],
                         committee_type = d.data["committee.committee_type_full"],
                         toward = d.data.toward,
                         candidate = d.data.candidate,
