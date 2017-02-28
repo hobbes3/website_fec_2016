@@ -155,7 +155,7 @@ function(
                     var committee_id = d.data.committee_id;
 
                     if(committee_id !== "none") {
-                        window.open("https://beta.fec.gov/data/committee/" + committee_id, "_blank");
+                        window.open("https://beta.fec.gov/data/committee/" + committee_id + "/?tab=independent-expenditures-committee&cycle=2016", "_blank");
                     }
                 });
 
@@ -182,7 +182,7 @@ function(
                     var committee_id = d.data.committee_id;
 
                     if(committee_id !== "none") {
-                        window.open("https://beta.fec.gov/data/committee/" + committee_id, "_blank");
+                        window.open("https://beta.fec.gov/data/committee/" + committee_id + "/?tab=independent-expenditures-committee&cycle=2016", "_blank");
                     }
                 });
 
@@ -522,7 +522,7 @@ function(
                 .on("click", function(d) {
                     var candidate_id = d.data.data[0].candidate_id;
 
-                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id, "_blank");
+                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id + "/?election_full=true&cycle=2016", "_blank");
                 });
 
         var arc_inner = d3.arc();
