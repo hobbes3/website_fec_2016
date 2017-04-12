@@ -13,9 +13,9 @@ function(
     return function(data) {
         var margin = {
                 "top": 10,
-                "right": 20,
+                "right": 10,
                 "bottom": 10,
-                "left": 20
+                "left": 10
             },
             green = data.green,
             red = data.red,
