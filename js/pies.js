@@ -159,7 +159,7 @@ function(
                     return 2 * (radius - thickness);
                 })
                 .attr("xlink:href", function(d) {
-                    return "/images/" + d.candidate + "_head.png";
+                    return "images/" + d.candidate + "_head.png";
                 })
                 .on("mouseover", function(d) {
                     var html = d.candidate.capitalize() + "<br><i>Click for more details</i>";

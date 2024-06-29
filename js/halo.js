@@ -463,7 +463,7 @@ function(
                     return 2 * (d.r - thickness);
                 })
                 .attr("xlink:href", function(d) {
-                    return "/images/" + d.data.candidate + "_head.png";
+                    return "images/" + d.data.candidate + "_head.png";
                 })
                 .on("mouseover", function(d) {
                     if(animation) return;

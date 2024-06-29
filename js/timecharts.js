@@ -142,7 +142,7 @@ function(
                 .attr("width", img_width)
                 .attr("height", chart_height / 2)
                 .attr("xlink:href", function(d) {
-                    return "/images/" + d.candidate + "_strip.jpg";
+                    return "images/" + d.candidate + "_strip.jpg";
                 })
                 .on("mouseover", function(d) {
                     var html = d.candidate.capitalize() + "<br><i>Click for more details</i>";
