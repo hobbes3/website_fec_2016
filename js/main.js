@@ -27,10 +27,10 @@ function(
     var present = location.search.indexOf("present=t") > -1 ? true : false;
 
     d3.queue()
-        .defer(d3.json, "/data/schedule_e_latest.json")
-        .defer(d3.json, "/data/schedule_e_stats.json")
-        .defer(d3.json, "/data/schedule_e_timechart.json")
-        .defer(d3.json, "/data/polls.json")
+        .defer(d3.json, "data/schedule_e_latest.json")
+        .defer(d3.json, "data/schedule_e_stats.json")
+        .defer(d3.json, "data/schedule_e_timechart.json")
+        .defer(d3.json, "data/polls.json")
         .await(load_data);
 
     function load_data(
