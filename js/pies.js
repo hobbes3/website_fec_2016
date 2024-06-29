@@ -174,7 +174,7 @@ function(
                 .on("click", function(d) {
                     var candidate_id = d.candidate_id;
 
-                    window.open("https://beta.fec.gov/data/candidate/" + candidate_id, "_blank");
+                    window.open("https://www.fec.gov/data/candidate/" + candidate_id, "_blank");
                 });
 
         var arc_path = pie_data

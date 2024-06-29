@@ -132,8 +132,8 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2 class="text-center">How the data flows</h2>
-                <p>The Federal Elections Commission has for many years made data available on the funding of presidential elections in the United States. Data is readily available on the <a href="https://beta.fec.gov/">FEC website</a> on who, what, and from where direct contributions are coming into candidates. You can ask questions, search names, and even look at this all on pretty maps. What is harder to find, however, is accessible information on Super-PACs. And that’s where Splunk comes in.</p>
-                <p>We have linked up to the latest FEC reports directly via the <a href="https://beta.fec.gov/">OpenFEC API (beta)</a>, where we get access to the latest contributions and spending data as soon as the data is updated. Ingesting into Splunk is easy and anyone can visualize the data themselves. Splunk has a number of out-of-the-box visualizations available, or you can design your own in d3 or other visualization libraries. The visualization displayed above is called "Halo" and is built using <a href="https://d3js.org/">d3.js</a>, and is be available for use in Splunk at <a href="https://splunkbase.splunk.com/app/3514/">Splunkbase</a>.</p>
+                <p>The Federal Elections Commission has for many years made data available on the funding of presidential elections in the United States. Data is readily available on the <a href="https://www.fec.gov/">FEC website</a> on who, what, and from where direct contributions are coming into candidates. You can ask questions, search names, and even look at this all on pretty maps. What is harder to find, however, is accessible information on Super-PACs. And that’s where Splunk comes in.</p>
+                <p>We have linked up to the latest FEC reports directly via the <a href="https://www.fec.gov/">OpenFEC API (www)</a>, where we get access to the latest contributions and spending data as soon as the data is updated. Ingesting into Splunk is easy and anyone can visualize the data themselves. Splunk has a number of out-of-the-box visualizations available, or you can design your own in d3 or other visualization libraries. The visualization displayed above is called "Halo" and is built using <a href="https://d3js.org/">d3.js</a>, and is be available for use in Splunk at <a href="https://splunkbase.splunk.com/app/3514/">Splunkbase</a>.</p>
             </div>
         </div>
     </section>
@@ -143,7 +143,7 @@
             <div class="col-lg-8 col-lg-offset-2">
                 <h2 class="text-center">The technical discussion</h2>
                 <p class="small text-center">by Satoshi Kawasaki</p>
-                <p>We used the <a href="https://beta.fec.gov/data/">OpenFEC site</a> to figure out Clinton and Trump's candidate ID as <code>P00003392</code> and <code>P80001571</code>, respectively.</p>
+                <p>We used the <a href="https://www.fec.gov/data/">OpenFEC site</a> to figure out Clinton and Trump's candidate ID as <code>P00003392</code> and <code>P80001571</code>, respectively.</p>
                 <p>The API endpoint for independent expenditures is called <a href="https://api.open.fec.gov/developers/#!/independent_expenditures">Schedule E</a>. An example endpoint is:</p>
                 <p><a href="https://api.open.fec.gov/v1/schedules/schedule_e/?per_page=100&api_key=DEMO_KEY&candidate_id=P00003392&is_notice=false&sort=expenditure_amount">https://api.open.fec.gov/v1/schedules/schedule_e/?<br/>per_page=100&api_key=DEMO_KEY&candidate_id=P00003392&<br/>is_notice=false&sort=expenditure_amount</a></p>
                 <p>Each response returns an object called <code>last_indexes</code> that is needed to paginate through the full result set. Therefore we wrote a <a href="https://github.com/hobbes3/fec/blob/master/bin/run_fec_api.py">Python script</a> on the Splunk server (different from this web server) to store and keep track of <code>last_indexes</code> and write the response to a file. The script also runs every hour to update the file and add new entries.</p>
@@ -251,7 +251,7 @@ O,opposing</pre>
 
     <footer>
         <div class="container text-center">
-            <p>© 2016 - Site powered by <a href="http://www.splunk.com/">Splunk</a>. Data provided by the <a href="https://beta.fec.gov/">Federal Election Commission</a> and the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post</a>. Original Grayscale theme by <a href="http://blackrockdigital.io/">Blackrock Digital</a>.</p>
+            <p>© 2016 - Site powered by <a href="http://www.splunk.com/">Splunk</a>. Data provided by the <a href="https://www.fec.gov/">Federal Election Commission</a> and the <a href="http://elections.huffingtonpost.com/pollster/api">Huffington Post</a>. Original Grayscale theme by <a href="http://blackrockdigital.io/">Blackrock Digital</a>.</p>
         </div>
     </footer>
 
