@@ -7,7 +7,8 @@ require([
     "js/timecharts",
     "js/halo",
     "js/pies",
-    "jquery_waypoint"
+    "jquery_waypoint",
+    "jquery_ui"
 ],
 function(
     $,
@@ -195,6 +196,7 @@ function(
                 x = i + 1 >= n ? 0 : i + 1;
 
             $("#toward_controls option:eq(" + x + ")").prop("selected", true).change();
+            $("#toward_group").effect("highlight", {color: "#FDFF47"}, 3000);
         }
 
         var halo_animated = false;
