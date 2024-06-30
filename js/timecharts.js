@@ -14,8 +14,8 @@ function(
 ) {
     return function(data) {
         var margin = {
-                "top": 110,
-                "right": 10,
+                "top": 130,
+                "right": 60,
                 "bottom": 100,
                 "left": 10
             },
@@ -541,7 +541,7 @@ function(
 
                     hover.attr("transform", "translate(" + [x(date), 0] + ")");
 
-                    var hover_date_text = moment.utc(date).format("MMMM Do") + " - " + moment.utc(date).add(6, "days").format("MMMM Do YYYY");
+                    var hover_date_text = moment.utc(date).format("MMM D") + " - " + moment.utc(date).add(6, "days").format("MMM D 'YY");
 
                     hover_date.text(hover_date_text);
                     hover_poll.text(function() {
